@@ -126,7 +126,6 @@ router.put('/modify/:vendorId', async (req, res) => {
   }
 });
 
-
 router.delete('/delete', async (req, res) => {
   try {
     const { vendorId } = req.body;
@@ -144,8 +143,6 @@ router.delete('/delete', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while deleting vendor information' });
   }
 });
-
-
 
 router.get('/get', verifyToken,  async (req, res) => {
   try {
@@ -187,6 +184,5 @@ router.get('/get', verifyToken,  async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching vendor information' });
   }
 });
-
 
 module.exports = router;
