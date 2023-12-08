@@ -40,7 +40,6 @@ router.post('/signup', async (req, res) => {
         password: hashedPassword,
       });
 
-      // Save the user to the database
       const savedUser = await user.save();
       res.json(savedUser);
     }

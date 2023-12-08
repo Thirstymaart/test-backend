@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const ProfileHome = require('../models/profilehome');
+const ProfileHome = require('../models/ProfileHome');
 const ProfileAbout = require('../models/ProfileAbout');
 const Vendor = require('../models/Vendor');
 
-// Middleware to verify the JWT and extract vendor ID
+
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(401).json({ error: 'Unauthorized' });

@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ProfileHome = new Schema({
   vendor: {
     type: Schema.Types.ObjectId,
-    ref: 'Vendor', // Reference to the vendor who registered the product
+    ref: 'Vendor', 
     required: true,
   },
   banner: {
