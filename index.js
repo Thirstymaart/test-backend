@@ -22,6 +22,8 @@ app.use('/api/review', require('./routes/reviewsRoute'));
 app.use('/api/search', require('./routes/searchRoute'));
 app.use('/api/profile', require('./routes/profileRoute'));
 app.use('/api/imageupload', require('./routes/imageUpload'));
+app.use('/api/keyword', require('./routes/keywordRoute'));
+app.use('/api/admin', require('./routes/adminRoute'));
 
 
 

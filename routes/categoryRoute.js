@@ -5,8 +5,8 @@ const Category = require('../models/Categories');
 // Add a new category
 router.post('/add', async (req, res) => {
   try {
-    const { categoryName, categoryImage, trendingStatus, subCategories } = req.body;
-    const category = new Category({ categoryName, categoryImage, trendingStatus, subCategories });
+    const { categoryName, categoryDesc, categoryImage, trendingStatus, subCategories } = req.body;
+    const category = new Category({ categoryName, categoryDesc, categoryImage, trendingStatus, subCategories });
     await category.save();
     res.json(category);
   } catch (error) {
