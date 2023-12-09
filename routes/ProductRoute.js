@@ -48,7 +48,7 @@ router.get('/list', async (req, res) => {
     }));
 
     // Send the list of products with tokens as a JSON response
-    res.json(productsWithTokens);
+    res.json(productsWithTokens ,"Hello World" );
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
