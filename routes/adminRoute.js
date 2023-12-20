@@ -42,23 +42,23 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check if super admin exists
-        const superAdmin = await AdminModel.findOne({ email: 'superadmin@example.com' });
+        // Check if admin exists
+        const admin = await AdminModel.findOne({ email });
 
-        if (!superAdmin) {
-            return res.status(404).json({ message: 'Super admin not found' });
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
         }
 
         // Compare the provided password with the hashed password
-        const isPasswordValid = await bcrypt.compare(password, superAdmin.password);
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Generate a token for super admin
-        const token = jwt.sign({ userId: superAdmin._id, email: superAdmin.email }, 'super_admin_secret_key', {
-            expiresIn: '12h', // Token expires in 1 hour, adjust as needed
+        // Generate a token for the admin
+        const token = jwt.sign({ userId: admin._id, email: admin.email, roles: admin.roles }, 'admin_secret_key', {
+            expiresIn: '12h', // Token expires in 12 hours, adjust as needed
         });
 
         res.json({ token });

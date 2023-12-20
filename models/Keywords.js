@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const keywordSchema = new mongoose.Schema({
-    keywordName: {
-        type: String,
+    keywords: {
+        type: Array,
         required: true,
     },
     category: {
@@ -19,18 +19,8 @@ const keywordSchema = new mongoose.Schema({
         default: Date.now,
         required: true,
     },
-    validDate: {
-        type: Date,
-        required: true,
-    },
 });
 
-// Set the validDate to one month after the addDate
-keywordSchema.pre('save', function (next) {
-    const oneMonthLater = new Date(this.addDate);
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-    this.validDate = oneMonthLater;
-    next();
-});
+
 
 module.exports = mongoose.model('Keywords', keywordSchema);

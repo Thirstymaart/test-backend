@@ -11,7 +11,6 @@ const verifyToken = (req, res, next) => {
   if (!token || !token.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access denied' });
   }
-
   const tokenString = token.split(' ')[1]; // Extract the token without 'Bearer '
   try {
     const decoded = jwt.verify(tokenString, secretKey); 
@@ -36,6 +35,30 @@ router.get('/vendorproducts', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/vendorproductsbycategory', verifyToken, async (req, res) => {
+  try {
+    // Use Mongoose to query all products for the specific vendor
+    const products = await Product.find({ vendor: req.vendorId });
+
+    // Organize products into separate arrays based on categories
+    const productsByCategory = {};
+    products.forEach(product => {
+      product.category.forEach(category => {
+        if (!productsByCategory[category]) {
+          productsByCategory[category] = [];
+        }
+        productsByCategory[category].push(product);
+      });
+    });
+
+    // Send the products organized by category as a JSON response
+    res.json(productsByCategory);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/list', async (req, res) => {
   try {
     // Use Mongoose to query the products collection
@@ -48,7 +71,7 @@ router.get('/list', async (req, res) => {
     }));
 
     // Send the list of products with tokens as a JSON response
-    res.json(productsWithTokens ,"Hello World" );
+    res.json(productsWithTokens );
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
@@ -83,11 +106,7 @@ router.get('/category/:category', async (req, res) => {
 
 router.post('/add', verifyToken, async (req, res) => {
   try {
-    const {type, subType, category, 
-      subcategory, name, description, price, image, 
-      subcategory1, name1, description1, price1, image1, 
-      subcategory2, name2, description2, price2, image2,
-      subcategory3, name3, description3, price3, image3,} = req.body;
+    const {type, subType, category, subcategory, name, description, price, image, } = req.body;
 
     const vendorId = req.vendorId; 
 
@@ -102,24 +121,7 @@ router.post('/add', verifyToken, async (req, res) => {
       description,
       price,
       image,
-      //-------------
-      subcategory1,
-      name1,
-      description1,
-      price1,
-      image1,
-      //-------------
-      subcategory2,
-      name2,
-      description2,
-      price2,
-      image2,
-      //-------------
-      subcategory3,
-      name3,
-      description3,
-      price3,
-      image3,
+      
     });
 
     // Save the product to the database

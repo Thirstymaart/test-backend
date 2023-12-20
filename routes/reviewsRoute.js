@@ -2,33 +2,22 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Review = require('../models/Review');
+const { verifyUserToken, verifyVendorToken } = require('../middleware/authMiddleware');
 
-const verifyToken = (req, res, next) => {
-  const token = req.header('Authorization');
-
-  if (!token || !token.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Access denied' });
-  }
-
-  const tokenString = token.split(' ')[1];
-  try {
-    const decoded = jwt.verify(tokenString, 'AbdcshNA846Sjdfg');   
-    req.userId = decoded.id;
-    next();
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ error: 'Invalid token' });
-  }
-};
 
 // Route to add a review
-router.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyUserToken, async (req, res) => {
   try {
-    const { vendorId, rating, comment } = req.body;
+    const { vendorToken, rating, comment } = req.body;
 
+    // Decode the JWT token to get the vendor's ID
+    const decodedToken = jwt.verify(vendorToken, 'AbdcshNA846Sjdfg'); 
+    const vendorId = decodedToken.id;
+    const user = req.userId
+    console.log();
     const review = new Review({
       vendorId,
-      userId: req.userId,
+      userId: user,
       rating,
       comment,
     });

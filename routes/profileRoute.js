@@ -3,13 +3,14 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const ProfileHome = require('../models/ProfileHome');
 const ProfileAbout = require('../models/ProfileAbout');
+const ProfileWhyus = require('../models/ProfileWhyus');
 const Vendor = require('../models/Vendor');
-
+const { verifyVendorToken } = require('../middleware/authMiddleware');
 
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
-    
+
     jwt.verify(token, 'AbdcshNA846Sjdfg', (err, user) => {
         if (err) return res.status(403).json({ error: 'Forbidden' });
         req.vendorId = user.id;
@@ -61,7 +62,7 @@ router.post('/home', authenticateToken, async (req, res) => {
                 nature,
                 homeintro,
                 yearofestablishment
-                
+
             });
 
             // Save the new profile to the database
@@ -187,6 +188,135 @@ router.get('/getabout', authenticateToken, async (req, res) => {
                 vision: profileAbout.vision,
                 mission: profileAbout.mission,
                 value: profileAbout.value,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+// Route to update profile whyus information for the authenticated vendor
+router.post('/whyus', verifyVendorToken, async (req, res) => {
+    try {
+        const {
+            mainHeading,
+            mainDescription,
+            heading1,
+            description1,
+            heading2,
+            description2,
+            heading3,
+            description3,
+            heading4,
+            description4,
+            closingTitle,
+            closingDescription,
+        } = req.body;
+        console.log(req.vendorId);
+        // Check if the vendor exists
+        const existingVendor = await Vendor.findById(req.vendorId);
+        if (!existingVendor) {
+            return res.status(400).json({ error: 'Invalid vendor ID' });
+        }
+
+        // Find and update the profile about by vendor ID
+        const updatedProfileWhyus = await ProfileWhyus.findOneAndUpdate(
+            { vendor: req.vendorId },
+            {
+                mainHeading,
+                mainDescription,
+                heading1,
+                description1,
+                heading2,
+                description2,
+                heading3,
+                description3,
+                heading4,
+                description4,
+                closingTitle,
+                closingDescription,
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedProfileWhyus) {
+            // If the profile about doesn't exist, create a new one
+            const newProfileWhyus = new ProfileWhyus({
+                vendor: req.vendorId,
+                mainHeading,
+                mainDescription,
+                heading1,
+                description1,
+                heading2,
+                description2,
+                heading3,
+                description3,
+                heading4,
+                description4,
+                closingTitle,
+                closingDescription,
+            });
+
+            const savedProfileWhyus = await newProfileWhyus.save();
+            return res.status(201).json(savedProfileWhyus);
+        }
+
+        res.status(200).json({
+            vendorId: req.vendorId,
+            ProfileWhyus: {
+                mainHeading : updatedProfileWhyus.mainHeading,
+                mainDescription : updatedProfileWhyus.mainDescription,
+                heading1 : updatedProfileWhyus.heading1,
+                description1 : updatedProfileWhyus.description1,
+                heading2 : updatedProfileWhyus.heading2,
+                description2 : updatedProfileWhyus.description2,
+                heading3 : updatedProfileWhyus.heading3,
+                description3 : updatedProfileWhyus.description3,
+                heading4 : updatedProfileWhyus.heading4,
+                description4 : updatedProfileWhyus.description4,
+                closingTitle : updatedProfileWhyus.closingTitle,
+                closingDescription : updatedProfileWhyus.closingDescription,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route to get whyus information for the authenticated vendor
+router.get('/getwhyus', verifyVendorToken, async (req, res) => {
+    try {
+        // Check if the vendor exists
+        const existingVendor = await Vendor.findById(req.vendorId);
+        if (!existingVendor) {
+            return res.status(400).json({ error: 'Invalid vendor ID' });
+        }
+
+        // Find the profile whyus by vendor ID
+        const profileWhyus = await ProfileWhyus.findOne({ vendor: req.vendorId });
+
+        if (!profileWhyus) {
+            return res.status(404).json({ error: 'Profile whyus not found' });
+        }
+
+        res.status(200).json({
+            vendorId: req.vendorId,
+            profileWhyus: {
+                mainHeading: profileWhyus.mainHeading,
+                mainDescription: profileWhyus.mainDescription,
+                heading1: profileWhyus.heading1,
+                description1: profileWhyus.description1,
+                heading2: profileWhyus.heading2,
+                description2: profileWhyus.description2,
+                heading3: profileWhyus.heading3,
+                description3: profileWhyus.description3,
+                heading4: profileWhyus.heading4,
+                description4: profileWhyus.description4,
+                closingTitle: profileWhyus.closingTitle,
+                closingDescription: profileWhyus.closingDescription,
             },
         });
     } catch (error) {

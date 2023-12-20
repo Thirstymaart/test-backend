@@ -20,73 +20,25 @@ const ProductSchema = new Schema({
     required: true,
   },
   //--------------------------------------------------------------------
-  subcategory1: {
+  subcategory: {
     type: Array,
     required: true,
   },
-  name1: {
+  name: {
     type: String,
     required: true,
   },
-  description1: {
+  description: {
     type: String,
     required: true,
   },
-  price1: {
+  price: {
     type: String,
     required: true,
   },
-  image1: {
+  image: {
     type: String,
     required: true,
-  },
-  //---------------------------------------------------------------------
-  subcategory2: {
-    type: String,
-  },
-  name2: {
-    type: String,
-  },
-  description2: {
-    type: String,
-  },
-  price2: {
-    type: String,
-  },
-  image2: {
-    type: String,
-  },
-  //---------------------------------------------------------------------
-  subcategory3: {
-    type: String,
-  },
-  name3: {
-    type: String,
-  },
-  description3: {
-    type: String,
-  },
-  price3: {
-    type: String,
-  },
-  image3: {
-    type: String,
-  },
-  //---------------------------------------------------------------------
-  subcategory4: {
-    type: String,
-  },
-  name4: {
-    type: String,
-  },
-  description4: {
-    type: String,
-  },
-  price4: {
-    type: String,
-  },
-  image4: {
-    type: String,
   },
 });
 
