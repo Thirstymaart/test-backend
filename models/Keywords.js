@@ -10,6 +10,10 @@ const keywordSchema = new mongoose.Schema({
         ref: 'Categories',
         required: true,
     },
+    categoryName: {
+        type: String, // Add this field for the category name
+        required: true,
+    },
     subcategory: {
         type: String,
         required: true,
@@ -21,6 +25,5 @@ const keywordSchema = new mongoose.Schema({
     },
 });
 
-
-
 module.exports = mongoose.model('Keywords', keywordSchema);
+

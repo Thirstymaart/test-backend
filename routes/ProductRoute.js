@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken'); // For handling JWTs
 const Product = require('../models/Products');
+const Vendorinfo = require('../models/VendorInfo');
 
 const secretKey = 'AbdcshNA846Sjdfg';
 // Middleware to verify JWT and extract vendor ID

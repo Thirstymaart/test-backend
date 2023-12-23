@@ -20,7 +20,6 @@ const verifyAdminToken = (req, res, next) => {
 
 const verifyVendorToken = (req, res, next) => {
     const vendorToken = req.headers.authorization;
-    console.log(vendorToken);
 
     if (!vendorToken) {
         return res.status(403).json({ message: 'Vendor Token is missing' });

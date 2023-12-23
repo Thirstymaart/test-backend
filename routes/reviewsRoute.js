@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Review = require('../models/Review');
+const User = require('../models/User');
+const Vendor = require('../models/Vendor');
 const { verifyUserToken, verifyVendorToken } = require('../middleware/authMiddleware');
 
 
@@ -32,18 +34,62 @@ router.post('/add', verifyUserToken, async (req, res) => {
 });
 
 // Route to get reviews for a specific vendor
-router.get('/vendor/:vendorId', async (req, res) => {
+
+
+router.get('/get', verifyVendorToken, async (req, res) => {
   try {
-    const vendorId = req.params.vendorId;
+    const vendorId = req.vendorId;
 
-    // Use Mongoose to query reviews for the specific vendor
-    const reviews = await Review.find({ vendorId }).populate('userId', 'username'); // Assuming User model has a 'username' field
+    const reviews = await Review.find({ vendorId }).select('rating comment createdAt userId');
 
-    res.json(reviews);
+    const totalRatings = reviews.length;
+    const averageRating = totalRatings > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings : 0;
+
+    const ratingCounts = {
+      '1': reviews.filter((review) => review.rating === 1).length,
+      '2': reviews.filter((review) => review.rating === 2).length,
+      '3': reviews.filter((review) => review.rating === 3).length,
+      '4': reviews.filter((review) => review.rating === 4).length,
+      '5': reviews.filter((review) => review.rating === 5).length,
+    };
+
+    const allRatings = [];
+
+    for (const review of reviews) {
+      let userOrVendorName = 'Unknown';
+
+      if (review.userId) {
+        const user = await User.findById(review.userId).select('name');
+        if (user) {
+          userOrVendorName = user.name;
+        }else{
+          const vendor = await Vendor.findById(review.userId).select('name');
+          userOrVendorName = vendor.name;
+        }
+      }
+
+      allRatings.push({
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        userOrVendorName,
+      });
+    }
+
+    res.status(200).json({
+      totalRatings,
+      averageRating,
+      ratingCounts,
+      allRatings,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred while fetching reviews' });
+    res.status(500).json({ error: 'An error occurred while fetching ratings' });
   }
 });
+
+
+
+
 
 module.exports = router;

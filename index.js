@@ -46,6 +46,8 @@ app
     page.jsx
   profile
     page.js
+    about
+      page.js
   page.js
   layout.js
 public

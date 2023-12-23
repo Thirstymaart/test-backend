@@ -2,17 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { verifyAdminToken, verifyVendorToken  } = require('../middleware/authMiddleware');
 const Keyword = require('../models/Keywords');
-const Vendor = require('../models/Vendor');
+const Vendorkeywords = require('../models/Vendorkeywords');
 
 // Route to add a keyword (requires admin token)
 router.post('/add', verifyAdminToken, async (req, res) => {
     try {
-        const { keywords, category, subcategory } = req.body;
+        const { keywords, category, categoryName, subcategory } = req.body;
 
-        // Assuming you have the category ID
         const keyword = new Keyword({
             keywords,
             category,
+            categoryName, // Add categoryName here
             subcategory,
         });
 
@@ -25,35 +25,43 @@ router.post('/add', verifyAdminToken, async (req, res) => {
     }
 });
 
-router.delete('/delete/:keywordId', verifyAdminToken, async (req, res) => {
+
+router.post('/addvendorkeywords', verifyVendorToken, async (req, res) => {
     try {
-        const keywordId = req.params.keywordId;
+        const { keywords } = req.body;
+        const vendorId = req.vendorId;
 
-        // Check if the keyword exists
-        const keyword = await Keyword.findById(keywordId);
+        // Check if entry for vendorId already exists
+        const existingEntry = await Vendorkeywords.findOne({ vendor: vendorId });
 
-        if (!keyword) {
-            return res.status(404).json({ message: 'Keyword not found' });
+        if (existingEntry) {
+            // If entry exists, update the keywords array
+            existingEntry.keywords = [...new Set(existingEntry.keywords.concat(keywords))];
+            await existingEntry.save();
+        } else {
+            // If entry doesn't exist, create a new entry
+            const vendorKeywords = new Vendorkeywords({
+                vendor: vendorId,
+                keywords: [...new Set(keywords)],
+            });
+            await vendorKeywords.save();
         }
 
-        // Delete the keyword
-        await Keyword.findByIdAndDelete(keywordId);
-
-        res.json({ message: 'Keyword deleted successfully' });
+        res.status(201).json({ message: 'Keywords added successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
 
-router.post('/list',  verifyVendorToken, async (req, res) => {
+
+router.post('/list', verifyVendorToken, async (req, res) => {
     try {
-        const { categoryId, subcategory } = req.body;
+        const { category, subcategory } = req.body;
         const vendorId = req.vendorId;
-        const vendor = await vendorId.find(vendorId);
 
         // Find keywords based on category and subcategory match
-        const keywords = await Keyword.find({ category: categoryId, subcategory });
+        const keywords = await Keyword.find({subcategory });
 
         if (keywords.length === 0) {
             return res.status(404).json({ message: 'No keywords found for the specified category' });
@@ -75,3 +83,25 @@ router.post('/list',  verifyVendorToken, async (req, res) => {
 });
 
 module.exports = router;
+
+
+// router.delete('/delete/:keywordId', verifyAdminToken, async (req, res) => {
+//     try {
+//         const keywordId = req.params.keywordId;
+
+//         // Check if the keyword exists
+//         const keyword = await Keyword.findById(keywordId);
+
+//         if (!keyword) {
+//             return res.status(404).json({ message: 'Keyword not found' });
+//         }
+
+//         // Delete the keyword
+//         await Keyword.findByIdAndDelete(keywordId);
+
+//         res.json({ message: 'Keyword deleted successfully' });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// });
