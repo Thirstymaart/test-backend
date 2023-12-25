@@ -10,8 +10,6 @@ app.use(cors());
 
 app.use('/api/uploads', express.static('uploads'));
 
-
-
 // available routes
 app.use('/api/user' , require('./routes/SignupRoute'))
 app.use('/api/vendorinfo' , require('./routes/VendorInfoRoute'))
