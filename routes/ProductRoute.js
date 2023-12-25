@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken'); // For handling JWTs
 const Product = require('../models/Products');
 const Vendorinfo = require('../models/VendorInfo');
+const Vendor = require('../models/Vendor');
 
 const secretKey = 'AbdcshNA846Sjdfg';
 // Middleware to verify JWT and extract vendor ID
@@ -66,18 +67,49 @@ router.get('/list', async (req, res) => {
     const products = await Product.find();
 
     // Create a JWT token for each product using its vendor ID
-    const productsWithTokens = products.map(product => ({
-      ...product.toJSON(),
-      token: jwt.sign({ id: product.vendor }, secretKey)
+    const productsWithTokens = await Promise.all(products.map(async (product) => {
+      // Fetch vendor info using vendor ID
+      const vendorInfo = await Vendorinfo.findOne({ vendorId: product.vendor });
+
+      // Fetch vendor phone number using vendor ID
+      const vendor = await Vendor.findOne({ _id: product.vendor });
+
+      // Add companyName and phoneNumber to the product
+      return {
+        ...product.toJSON(),
+        companyName: vendorInfo ? vendorInfo.companyName : null,
+        phoneNumber: vendor ? vendor.phone : null,
+        token: jwt.sign({ id: product.vendor }, secretKey),
+      };
     }));
 
     // Send the list of products with tokens as a JSON response
-    res.json(productsWithTokens );
+    res.json(productsWithTokens);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+// router.get('/list', async (req, res) => {
+//   try {
+//     // Use Mongoose to query the products collection
+//     const products = await Product.find();
+
+//     // Create a JWT token for each product using its vendor ID
+//     const productsWithTokens = products.map(product => ({
+//       ...product.toJSON(),
+//       token: jwt.sign({ id: product.vendor }, secretKey)
+//     }));
+
+//     // Send the list of products with tokens as a JSON response
+//     res.json(productsWithTokens );
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
 
 router.get('/category/:category', async (req, res) => {
   try {

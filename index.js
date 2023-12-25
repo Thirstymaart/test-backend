@@ -8,7 +8,7 @@ const port = process.env.PORT || 3001
 app.use(express.json())
 app.use(cors());
 
-app.use('/uploads', express.static('uploads'));
+app.use('/api/uploads', express.static('uploads'));
 
 
 
@@ -24,7 +24,7 @@ app.use('/api/profile', require('./routes/profileRoute'));
 app.use('/api/imageupload', require('./routes/imageUpload'));
 app.use('/api/keyword', require('./routes/keywordRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
-
+// app.use('/api/imageupload', require('./routes/imageUploadRoute'));
 
 
 app.listen(port, () => {

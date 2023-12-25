@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -20,20 +21,21 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+
 router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
     const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
     const folderPath = `./uploads/${vendorId}`;
-  
+
     try {
       await fs.mkdir(folderPath, { recursive: true });
-  
+
       const imageName = req.file.originalname;
       const imagePath = `${folderPath}/${imageName}`;
       await fs.writeFile(imagePath, req.file.buffer);
-  
+
       // Construct the full URL including the server domain and path
-      const fullUrl = `http://localhost:3001/uploads/${vendorId}/${imageName}`;
-  
+      const fullUrl = `https://thirstymaart.com/uploads/${vendorId}/${imageName}`;
+
       res.json({ imageUrl: fullUrl });
     } catch (error) {
       console.error('Error uploading image:', error);
