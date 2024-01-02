@@ -9,39 +9,43 @@ const secretKey = 'AbdcshNA846Sjdfg';
 
 router.post('/signup', async (req, res) => {
   try {
-    const { name, companyname, email, phone, city, password, isVendor } = req.body;
+    const { name, companyName, email, phoneNo, city, password, role, username } = req.body;
 
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    if (isVendor) {
+    if (role === 'Vendor') {
       // Create a new vendor
       const vendor = new Vendor({
         name,
-        companyname,
-        email, 
-        phone, 
-        city, 
+        companyName,
+        email,
+        phoneNo,
+        city,
         password: hashedPassword,
+        username, // Add the username field
       });
 
       // Save the vendor to the database
       const savedVendor = await vendor.save();
       res.json(savedVendor);
-    } else {
+    } else if (role === 'User') {
       // Create a new user
       const user = new User({
         name,
-        companyname,
+        companyName,
         email,
-        phone,
+        phoneNo,
         city,
         password: hashedPassword,
+        username, // Add the username field
       });
 
       const savedUser = await user.save();
       res.json(savedUser);
+    } else {
+      res.status(400).json({ error: 'Invalid role' });
     }
   } catch (error) {
     console.error(error);
@@ -49,51 +53,58 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    // Attempt to find a match in the User collection
-    const user = await User.findOne({ email });
+    // Attempt to find a match in the User collection by email or username
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
+
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
         {
           id: user._id,
           role: user.isVendor ? 'vendor' : 'user',
-          name: user.name, // Include the name in the token
-          companyName: user.companyname // Include the company name in the token (if applicable)
+          name: user.name,
+          companyName: user.companyname,
         },
         secretKey,
-        { expiresIn: '24h'}
+        { expiresIn: '24h' }
       );
 
       return res.json({
         token,
         role: user.isVendor ? 'vendor' : 'user',
-        name: user.name, // Include the name in the response
-        companyName: user.companyname // Include the company name in the response (if applicable)
+        name: user.name,
+        companyName: user.companyname,
       });
     }
 
-    // Attempt to find a match in the Vendor collection
-    const vendor = await Vendor.findOne({ email });
+    // Attempt to find a match in the Vendor collection by email or username
+    const vendor = await Vendor.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
+
     if (vendor && (await bcrypt.compare(password, vendor.password))) {
       const token = jwt.sign(
         {
           id: vendor._id,
           role: 'vendor',
-          name: vendor.name, // Include the name in the token
-          companyName: vendor.companyname // Include the company name in the token (if applicable)
+          name: vendor.name,
+          companyName: vendor.companyname,
         },
         secretKey,
-        { expiresIn: '24h'}
+        { expiresIn: '24h' }
       );
 
       return res.json({
         token,
         role: 'vendor',
-        name: vendor.name, // Include the name in the response
-        companyName: vendor.companyname // Include the company name in the response (if applicable)
+        name: vendor.name,
+        companyName: vendor.companyname,
       });
     }
 

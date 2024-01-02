@@ -9,6 +9,7 @@ const { verifyVendorToken } = require('../middleware/authMiddleware');
 
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization');
+    console.log(token);
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     jwt.verify(token, 'AbdcshNA846Sjdfg', (err, user) => {
@@ -19,6 +20,33 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+router.post('/getprofile', async (req, res) => {
+    try {
+      const { username } = req.body;
+  
+      // Search for the vendor in the Vendor collection by username
+      const vendor = await Vendor.findOne({ username });
+  
+      if (!vendor) {
+        return res.status(404).json({ error: 'Vendor not found' });
+      }
+  
+      // Get the vendor's ID
+      const vendorId = vendor._id;
+  
+      // Create a token with the vendor's ID
+      const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
+        expiresIn: '24h',
+      });
+  
+      // Send the token in the response
+      res.json({ token });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+  
 // Route to handle profile data creation or update
 router.post('/home', authenticateToken, async (req, res) => {
     try {

@@ -22,7 +22,7 @@ app.use('/api/profile', require('./routes/profileRoute'));
 app.use('/api/imageupload', require('./routes/imageUpload'));
 app.use('/api/keyword', require('./routes/keywordRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
-// app.use('/api/imageupload', require('./routes/imageUploadRoute'));
+app.use('/api/enquiries', require('./routes/enquiriesRoute'));
 
 
 app.listen(port, () => {

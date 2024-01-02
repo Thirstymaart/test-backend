@@ -9,13 +9,16 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    categoryDesc: {
+        type: String,
+        required: true,
+    },
     categoryImage: {
         type: String,
         required: true,
     },
     trendingStatus: {
         type: Boolean,
-        required: true,
     },
     subCategories: {
         type: Array,

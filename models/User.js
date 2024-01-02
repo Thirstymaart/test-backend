@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    phone: {
-        type: Number,
+    phoneNo: {
+        type: String,
         required: true,
     },
     city: {
@@ -26,10 +26,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    isVendor: {
-        type: Boolean,
+    role: {
+        type: String,
         required: true,
-        default: false,
+        enum: ['User'],
+        default: 'User',
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
     },
 });
 

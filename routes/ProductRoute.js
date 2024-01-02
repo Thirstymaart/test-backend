@@ -71,14 +71,15 @@ router.get('/list', async (req, res) => {
       // Fetch vendor info using vendor ID
       const vendorInfo = await Vendorinfo.findOne({ vendorId: product.vendor });
 
-      // Fetch vendor phone number using vendor ID
+      // Fetch vendor phone number and username using vendor ID
       const vendor = await Vendor.findOne({ _id: product.vendor });
 
-      // Add companyName and phoneNumber to the product
+      // Add companyName, phoneNumber, and username to the product
       return {
         ...product.toJSON(),
         companyName: vendorInfo ? vendorInfo.companyName : null,
-        phoneNumber: vendor ? vendor.phone : null,
+        phoneNumber: vendor ? vendor.phoneNo : null,
+        username: vendor ? vendor.username : null,
         token: jwt.sign({ id: product.vendor }, secretKey),
       };
     }));
@@ -90,6 +91,7 @@ router.get('/list', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 
 // router.get('/list', async (req, res) => {
@@ -123,9 +125,21 @@ router.get('/category/:category', async (req, res) => {
     }
 
     // Create a JWT token for each product in the category using its vendor ID
-    const productsWithTokens = products.map(product => ({
-      ...product.toJSON(),
-      token: jwt.sign({ id: product.vendor }, secretKey)
+    const productsWithTokens = await Promise.all(products.map(async (product) => {
+      // Fetch vendor info using vendor ID
+      const vendorInfo = await Vendorinfo.findOne({ vendorId: product.vendor });
+
+      // Fetch vendor phone number and username using vendor ID
+      const vendor = await Vendor.findOne({ _id: product.vendor });
+
+      // Add companyName, phoneNumber, and username to the product
+      return {
+        ...product.toJSON(),
+        companyName: vendorInfo ? vendorInfo.companyName : null,
+        phoneNumber: vendor ? vendor.phoneNo : null,
+        username: vendor ? vendor.username : null,
+        token: jwt.sign({ id: product.vendor }, secretKey),
+      };
     }));
 
     // Send the list of products for the specified category with tokens as a JSON response
@@ -135,6 +149,7 @@ router.get('/category/:category', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 
 router.post('/add', verifyToken, async (req, res) => {

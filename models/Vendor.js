@@ -2,35 +2,41 @@
 const mongoose = require('mongoose');
 
 const vendorSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  companyname: {
-    type: String,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  phone: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
-    required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  isVendor: {
-    type: Boolean,
-    required: true,
-    default: true,
-  },
+    name: {
+        type: String,
+        required: true,
+    },
+    companyname: {
+        type: String,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    phoneNo: {
+        type: String,
+        required: true,
+    },
+    city: {
+        type: String,
+        required: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    role: {
+        type: String,
+        required: true,
+        enum: ['Vendor'],
+        default: 'Vendor',
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+    },
 });
 
 module.exports = mongoose.model('Vendor', vendorSchema);
