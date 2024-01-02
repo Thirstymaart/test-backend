@@ -34,7 +34,7 @@ router.post('/upload', verifyToken, upload.single('image'), async (req, res) => 
       await fs.writeFile(imagePath, req.file.buffer);
 
       // Construct the full URL including the server domain and path
-      const fullUrl = `http://localhost:3001/api/uploads/${vendorId}/${imageName}`;
+      const fullUrl = `http://localhost:3001/uploads/${vendorId}/${imageName}`;
   
       res.json({ imageUrl: fullUrl });
     } catch (error) {
