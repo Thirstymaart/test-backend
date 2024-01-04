@@ -23,6 +23,8 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+
+
 router.post('/upload', upload.single('image'), async (req, res) => {
   const vendorId = "658fe6b01c4888e265f8294a" // Assuming vendorId is stored in JWT payload
   const folderPath = `./uploads/${vendorId}`;
