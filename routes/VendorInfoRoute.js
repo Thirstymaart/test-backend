@@ -177,6 +177,7 @@ router.get('/get', verifyToken, async (req, res) => {
       // Include phone number from Vendor collection
       phone: vendor.phoneNo,
       city: vendor.city,
+      username: vendor.username,
     };
 
     res.status(200).json(mergedData);
