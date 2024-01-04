@@ -19,7 +19,6 @@ router.post('/signup', async (req, res) => {
       // Create a new vendor
       const vendor = new Vendor({
         name,
-        companyName,
         email,
         phoneNo,
         city,
@@ -34,12 +33,11 @@ router.post('/signup', async (req, res) => {
       // Create a new user
       const user = new User({
         name,
-        companyName,
         email,
         phoneNo,
         city,
         password: hashedPassword,
-        username, // Add the username field
+        username, 
       });
 
       const savedUser = await user.save();

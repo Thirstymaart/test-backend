@@ -6,9 +6,6 @@ const vendorSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    companyname: {
-        type: String,
-    },
     email: {
         type: String,
         required: true,

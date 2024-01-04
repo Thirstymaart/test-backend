@@ -17,6 +17,10 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    categoryImageOutline: {
+        type: String,
+        required: true,
+    },
     trendingStatus: {
         type: Boolean,
     },

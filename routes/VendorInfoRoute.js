@@ -144,7 +144,7 @@ router.delete('/delete', async (req, res) => {
   }
 });
 
-router.get('/get', verifyToken,  async (req, res) => {
+router.get('/get', verifyToken, async (req, res) => {
   try {
     // The verifyToken middleware has already extracted the vendorId from the token
     const vendorId = req.vendorId;
@@ -153,7 +153,7 @@ router.get('/get', verifyToken,  async (req, res) => {
     const vendorInfo = await VendorInfo.findOne({ vendorId });
 
     // Query Vendor collection
-    const vendor = await Vendor.findOne({_id :vendorId });
+    const vendor = await Vendor.findOne({ _id: vendorId });
 
     if (!vendorInfo) {
       return res.status(404).json({ message: 'Vendor information not found' });
@@ -174,7 +174,8 @@ router.get('/get', verifyToken,  async (req, res) => {
       // Add fields from Vendor
       name: vendor.name,
       email: vendor.email,
-      phone: vendor.phone,
+      // Include phone number from Vendor collection
+      phone: vendor.phoneNo,
       city: vendor.city,
     };
 
@@ -184,5 +185,4 @@ router.get('/get', verifyToken,  async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching vendor information' });
   }
 });
-
 module.exports = router;
