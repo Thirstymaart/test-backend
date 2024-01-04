@@ -37,7 +37,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     await fs.writeFile(imagePath, req.file.buffer);
 
     // Construct the full URL including the server domain and path
-    const fullUrl = `https://thirstymaart.com/api/uploads/${vendorId}/${imageName}`;
+    const fullUrl = `${imageName}`;
 
     res.json({ imageUrl: fullUrl });
   } catch (error) {
