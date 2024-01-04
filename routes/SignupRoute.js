@@ -79,7 +79,6 @@ router.post('/login', async (req, res) => {
         role: user.isVendor ? 'vendor' : 'user',
         name: user.name,
         companyName: user.companyname,
-        username:user.username,
       });
     }
 
@@ -95,6 +94,7 @@ router.post('/login', async (req, res) => {
           role: 'vendor',
           name: vendor.name,
           companyName: vendor.companyname,
+          username:vendor.username,
         },
         secretKey,
         { expiresIn: '24h' }
