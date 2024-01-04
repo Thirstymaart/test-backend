@@ -43,9 +43,10 @@ app
   login
     page.jsx
   profile
-    page.js
-    about
+    [slug]
       page.js
+      about
+        page.js
   page.js
   layout.js
 public
