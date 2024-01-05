@@ -13,8 +13,8 @@ const verifyToken = (req, res, next) => {
 
   const tokenString = token.split(' ')[1]; // Extract the token without 'Bearer '
   try {
-    const decoded = jwt.verify(tokenString, 'AbdcshNA846Sjdfg'); 
-    req.vendorId = decoded.id; 
+    const decoded = jwt.verify(tokenString, 'AbdcshNA846Sjdfg');
+    req.vendorId = decoded.id;
     next();
   } catch (error) {
     console.error(error);
@@ -28,6 +28,7 @@ router.post('/add', verifyToken, async (req, res) => {
     // The verifyToken middleware has already extracted the vendorId from the token
     const vendorId = req.vendorId;
     console.log(vendorId);
+    
 
     // Check if a vendor with the provided vendorId already exists
     const existingVendor = await VendorInfo.findOne({ vendorId });
@@ -43,6 +44,10 @@ router.post('/add', verifyToken, async (req, res) => {
         workingHour,
         address,
         logo,
+        nature,
+        serviceAria,
+        yearofestablishment,
+        maplink,
       } = req.body;
 
       const updatedFields = {
@@ -54,7 +59,12 @@ router.post('/add', verifyToken, async (req, res) => {
         workingHour,
         address,
         logo,
+        nature,
+        serviceAria,
+        yearofestablishment,
+        maplink,
       };
+      console.log("log",updatedFields);
 
       // Use $set to update the specified fields without affecting the others
       await VendorInfo.findOneAndUpdate({ vendorId }, { $set: updatedFields });
@@ -71,6 +81,10 @@ router.post('/add', verifyToken, async (req, res) => {
         workingHour,
         address,
         logo,
+        nature,
+        serviceAria,
+        yearofestablishment,
+        maplink,
       } = req.body;
 
       const vendorInfo = new VendorInfo({
@@ -83,6 +97,10 @@ router.post('/add', verifyToken, async (req, res) => {
         workingHour,
         address,
         logo,
+        nature,
+        serviceAria,
+        yearofestablishment,
+        maplink,
       });
 
       await vendorInfo.save();
@@ -171,6 +189,12 @@ router.get('/get', verifyToken, async (req, res) => {
       workingHour: vendorInfo.workingHour,
       address: vendorInfo.address,
       logo: vendorInfo.logo,
+      nature: vendorInfo.nature,
+      serviceAria: vendorInfo.serviceAria,
+      yearofestablishment: vendorInfo.yearofestablishment,
+      maplink: vendorInfo.maplink,
+      
+      
       // Add fields from Vendor
       name: vendor.name,
       email: vendor.email,

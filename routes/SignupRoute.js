@@ -9,7 +9,7 @@ const secretKey = 'AbdcshNA846Sjdfg';
 
 router.post('/signup', async (req, res) => {
   try {
-    const { name, companyName, email, phoneNo, city, password, role, username } = req.body;
+    const { name, email, phoneNo, city, password, role, username } = req.body;
 
     // Hash the password
     const salt = await bcrypt.genSalt(10);
@@ -23,7 +23,8 @@ router.post('/signup', async (req, res) => {
         phoneNo,
         city,
         password: hashedPassword,
-        username, // Add the username field
+        username,
+        
       });
 
       // Save the vendor to the database
@@ -38,6 +39,7 @@ router.post('/signup', async (req, res) => {
         city,
         password: hashedPassword,
         username, 
+        
       });
 
       const savedUser = await user.save();

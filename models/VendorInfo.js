@@ -9,7 +9,6 @@ const vendorInfoSchema = new mongoose.Schema({
     },
     gstNo: {
         type: String,
-        required: true,
     },
     panNo: {
         type: String,
@@ -39,7 +38,22 @@ const vendorInfoSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    
+    nature: {
+        type: String,
+        required: true,
+    },
+    serviceAria: {
+        type: String,
+        required: true,
+    },
+    yearofestablishment: {
+        type: String,
+        required: true,
+    },
+    maplink: {
+        type: String,
+        required: true,
+    },
 });
 
 const VendorInfo = mongoose.model('VendorInfo', vendorInfoSchema);

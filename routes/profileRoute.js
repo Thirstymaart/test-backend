@@ -22,31 +22,31 @@ const authenticateToken = (req, res, next) => {
 
 router.post('/getprofile', async (req, res) => {
     try {
-      const { username } = req.body;
-  
-      // Search for the vendor in the Vendor collection by username
-      const vendor = await Vendor.findOne({ username });
-  
-      if (!vendor) {
-        return res.status(404).json({ error: 'Vendor not found' });
-      }
-  
-      // Get the vendor's ID
-      const vendorId = vendor._id;
-  
-      // Create a token with the vendor's ID
-      const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
-        expiresIn: '24h',
-      });
-  
-      // Send the token in the response
-      res.json({ token });
+        const { username } = req.body;
+
+        // Search for the vendor in the Vendor collection by username
+        const vendor = await Vendor.findOne({ username });
+
+        if (!vendor) {
+            return res.status(404).json({ error: 'Vendor not found' });
+        }
+
+        // Get the vendor's ID
+        const vendorId = vendor._id;
+
+        // Create a token with the vendor's ID
+        const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
+            expiresIn: '24h',
+        });
+
+        // Send the token in the response
+        res.json({ token });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Server error' });
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
     }
-  });
-  
+});
+
 // Route to handle profile data creation or update
 router.post('/home', authenticateToken, async (req, res) => {
     try {
@@ -54,11 +54,13 @@ router.post('/home', authenticateToken, async (req, res) => {
             banner,
             banneralt,
             homeintro,
-            yearofestablishment,
-            serviceAria,
-            nature
+            facebook,
+            instagram,
+            youtube,
+            linkedin,
         } = req.body;
-
+        console.log(req.body);
+        console.log(req.vendorId);
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
         if (!existingVendor) {
@@ -72,10 +74,11 @@ router.post('/home', authenticateToken, async (req, res) => {
         if (existingProfile) {
             existingProfile.banner = banner;
             existingProfile.banneralt = banneralt;
-            existingProfile.serviceAria = serviceAria;
-            existingProfile.nature = nature;
             existingProfile.homeintro = homeintro;
-            existingProfile.yearofestablishment = yearofestablishment;
+            existingProfile.facebook = facebook;
+            existingProfile.instagram = instagram;
+            existingProfile.youtube = youtube;
+            existingProfile.linkedin = linkedin;
 
             // Save the updated profile
             const updatedProfile = await existingProfile.save();
@@ -86,10 +89,11 @@ router.post('/home', authenticateToken, async (req, res) => {
                 vendor: req.vendorId,
                 banner,
                 banneralt,
-                serviceAria,
-                nature,
                 homeintro,
-                yearofestablishment
+                facebook,
+                instagram,
+                youtube,
+                linkedin,
 
             });
 
@@ -124,17 +128,19 @@ router.get('/gethome', authenticateToken, async (req, res) => {
             profile: {
                 banner: profile.banner,
                 banneralt: profile.banneralt,
-                serviceAria: profile.serviceAria,
-                nature: profile.nature,
                 homeintro: profile.homeintro,
-                yearofestablishment: profile.yearofestablishment,
+                facebook: profile.facebook,
+                instagram: profile.instagram,
+                youtube: profile.youtube,
+                linkedin: profile.linkedin,
+
             },
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-});
+}); 
 
 // Route to update profile about information for the authenticated vendor
 router.post('/about', authenticateToken, async (req, res) => {
@@ -294,18 +300,18 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
         res.status(200).json({
             vendorId: req.vendorId,
             ProfileWhyus: {
-                mainHeading : updatedProfileWhyus.mainHeading,
-                mainDescription : updatedProfileWhyus.mainDescription,
-                heading1 : updatedProfileWhyus.heading1,
-                description1 : updatedProfileWhyus.description1,
-                heading2 : updatedProfileWhyus.heading2,
-                description2 : updatedProfileWhyus.description2,
-                heading3 : updatedProfileWhyus.heading3,
-                description3 : updatedProfileWhyus.description3,
-                heading4 : updatedProfileWhyus.heading4,
-                description4 : updatedProfileWhyus.description4,
-                closingTitle : updatedProfileWhyus.closingTitle,
-                closingDescription : updatedProfileWhyus.closingDescription,
+                mainHeading: updatedProfileWhyus.mainHeading,
+                mainDescription: updatedProfileWhyus.mainDescription,
+                heading1: updatedProfileWhyus.heading1,
+                description1: updatedProfileWhyus.description1,
+                heading2: updatedProfileWhyus.heading2,
+                description2: updatedProfileWhyus.description2,
+                heading3: updatedProfileWhyus.heading3,
+                description3: updatedProfileWhyus.description3,
+                heading4: updatedProfileWhyus.heading4,
+                description4: updatedProfileWhyus.description4,
+                closingTitle: updatedProfileWhyus.closingTitle,
+                closingDescription: updatedProfileWhyus.closingDescription,
             },
         });
     } catch (error) {

@@ -17,13 +17,8 @@ const ProductSchema = new Schema({
   },
   category: {
     type: Array,
-    required: true,
   },
   //--------------------------------------------------------------------
-  subcategory: {
-    type: Array,
-    required: true,
-  },
   name: {
     type: String,
     required: true,
