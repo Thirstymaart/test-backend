@@ -8,12 +8,13 @@ const verifyAdminToken = (req, res, next) => {
         return res.status(403).json({ message: 'Admin Token is missing' });
     }
 
-    jwt.verify(adminToken.replace('Bearer ', ''), 'admin_secret_key', (err, decoded) => {
+    jwt.verify(adminToken.replace('Bearer ', ''), 'AbdcshNA846Sjdfg', (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: 'Invalid admin token' });
         }
 
-        req.admin = decoded;
+        req.admin = decoded.id;
+        console.log(req.admin);
         next();
     });
 };
