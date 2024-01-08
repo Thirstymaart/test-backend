@@ -13,7 +13,6 @@ const upload = multer({ storage: storage });
 const verifyToken = (req, res, next) => {
 
   const token = req.headers.authorization?.split(' ')[1];
-  console.log(token, "token");
   if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
   jwt.verify(token, 'AbdcshNA846Sjdfg', (err, user) => {
@@ -48,9 +47,7 @@ const verifyToken = (req, res, next) => {
 
 router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
     const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
-    console.log("userid",req.user.id);
     const folderPath = `./uploads/${vendorId}`;
-    console.log("folderPath", folderPath );
 
     try {
       await fs.mkdir(folderPath, { recursive: true });

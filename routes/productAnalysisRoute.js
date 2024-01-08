@@ -102,7 +102,6 @@ router.post('/get-data-for-date', verifyToken, async (req, res) => {
 
     const previousStartDate = new Date(startDate);
     previousStartDate.setDate(previousStartDate.getDate() - 1);
-    console.log(startDate, previousStartDate);
    
     // Find all product analysis entries for the specified vendor within the date range for both current and previous weeks
     const currentDayData = await ProductAnalysis.find({
@@ -111,7 +110,6 @@ router.post('/get-data-for-date', verifyToken, async (req, res) => {
         $gte: new Date(startDate)
       },
     });
-    console.log(currentDayData, "current");
 
     const previousDayData = await ProductAnalysis.find({
       vendor: vendorId,
@@ -120,7 +118,6 @@ router.post('/get-data-for-date', verifyToken, async (req, res) => {
       },
        
     });
-    console.log(previousDayData, "prev");
     
       const currentDate = new Date(startDate);
       currentDate.setDate(currentDate.getDate());

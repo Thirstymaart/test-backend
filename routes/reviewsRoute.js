@@ -16,7 +16,6 @@ router.post('/add', verifyUserToken, async (req, res) => {
     const decodedToken = jwt.verify(vendorToken, 'AbdcshNA846Sjdfg'); 
     const vendorId = decodedToken.id;
     const user = req.userId
-    console.log();
     const review = new Review({
       vendorId,
       userId: user,

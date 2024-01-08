@@ -11,7 +11,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const mongoURI = process.env.MONGO_URI;
-console.log(mongoURI);
 
 
 const conectToMongo = () => {

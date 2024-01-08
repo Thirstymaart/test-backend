@@ -32,7 +32,6 @@ router.post('/add', async (req, res) => {
             description: req.body.description,
             companyname: req.body.companyname,
         });
-        console.log(enquiry);
 
         const savedEnquiry = await enquiry.save();
         res.status(201).json(savedEnquiry);

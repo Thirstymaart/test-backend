@@ -27,7 +27,6 @@ router.post('/add', verifyToken, async (req, res) => {
   try {
     // The verifyToken middleware has already extracted the vendorId from the token
     const vendorId = req.vendorId;
-    console.log(vendorId);
     
 
     // Check if a vendor with the provided vendorId already exists
@@ -64,7 +63,6 @@ router.post('/add', verifyToken, async (req, res) => {
         yearofestablishment,
         maplink,
       };
-      console.log("log",updatedFields);
 
       // Use $set to update the specified fields without affecting the others
       await VendorInfo.findOneAndUpdate({ vendorId }, { $set: updatedFields });

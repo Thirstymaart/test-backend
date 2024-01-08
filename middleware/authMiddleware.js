@@ -46,7 +46,6 @@ const verifyUserToken = (req, res, next) => {
         if (err) {
             return res.status(401).json({ message: 'Invalid user token' });
         }
-        console.log(decoded.id);
         req.userId = decoded.id;
         next();
     });

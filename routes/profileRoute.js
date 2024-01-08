@@ -9,13 +9,11 @@ const { verifyVendorToken } = require('../middleware/authMiddleware');
 
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization');
-    console.log(token);
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     jwt.verify(token, 'AbdcshNA846Sjdfg', (err, user) => {
         if (err) return res.status(403).json({ error: 'Forbidden' });
         req.vendorId = user.id;
-        console.log(user.id);
         next();
     });
 };
@@ -59,8 +57,6 @@ router.post('/home', authenticateToken, async (req, res) => {
             youtube,
             linkedin,
         } = req.body;
-        console.log(req.body);
-        console.log(req.vendorId);
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
         if (!existingVendor) {
@@ -111,7 +107,6 @@ router.get('/gethome', authenticateToken, async (req, res) => {
     try {
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
-        console.log(req.vendorId);
         if (!existingVendor) {
             return res.status(400).json({ error: 'Invalid vendor ID' });
         }
@@ -248,7 +243,6 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
             closingTitle,
             closingDescription,
         } = req.body;
-        console.log(req.vendorId);
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
         if (!existingVendor) {
