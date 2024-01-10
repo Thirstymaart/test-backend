@@ -18,6 +18,9 @@ const ProductSchema = new Schema({
   category: {
     type: String,
   },
+  categorydesc: {
+    type: String,
+  },
   //--------------------------------------------------------------------
   name: {
     type: String,

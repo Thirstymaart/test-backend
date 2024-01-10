@@ -154,7 +154,7 @@ router.get('/category/:category', async (req, res) => {
 
 router.post('/add', verifyToken, async (req, res) => {
   try {
-    const {type, subType, category, name, description, price, image, size, minqty, additionalinfo, name1, description1, price1, image1, size1, minqty1, additionalinfo1, name2, description2, price2, image2, size2, minqty2, additionalinfo2, name3, description3, price3, image3, size3, minqty3, additionalinfo3, } = req.body;
+    const {type, subType, category, categorydesc, name, description, price, image, size, minqty, additionalinfo, name1, description1, price1, image1, size1, minqty1, additionalinfo1, name2, description2, price2, image2, size2, minqty2, additionalinfo2, name3, description3, price3, image3, size3, minqty3, additionalinfo3, } = req.body;
 
     const vendorId = req.vendorId; 
 
@@ -164,6 +164,7 @@ router.post('/add', verifyToken, async (req, res) => {
       type,
       subType,
       category,
+      categorydesc,
       //========================
       name,
       description,

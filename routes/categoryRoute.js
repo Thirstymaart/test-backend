@@ -15,6 +15,57 @@ router.post('/add', async (req, res) => {
   }
 });
 
+// List all categories
+router.get('/list', async (req, res) => {
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.get('/:categoryName', async (req, res) => {
+  try {
+    const categoryName = req.params.categoryName;
+    const category = await Category.findOne({ categoryName });
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json(category);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.get('/subcategories/:subCategoryName', async (req, res) => {
+  try {
+    const subCategoryName = req.params.subCategoryName;
+
+    // Assuming subcategories have unique names across all categories
+    const category = await Category.findOne({ 'subCategories.subCategoryName': subCategoryName });
+
+    if (!category) {
+      return res.status(404).json({ error: 'Subcategory not found' });
+    }
+
+    const subCategory = category.subCategories.find(sub => sub.subCategoryName === subCategoryName);
+
+    if (!subCategory) {
+      return res.status(404).json({ error: 'Subcategory not found' });
+    }
+
+    res.json(subCategory);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Delete a category by ID
 router.delete('/delete/:categoryId', async (req, res) => {
     try {
@@ -30,19 +81,6 @@ router.delete('/delete/:categoryId', async (req, res) => {
       console.error(error);
       res.status(500).json({ error: 'Server error' });
     }
-  });
-
-
-
-// List all categories
-router.get('/list', async (req, res) => {
-  try {
-    const categories = await Category.find();
-    res.json(categories);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
 });
 
 // List trending categories

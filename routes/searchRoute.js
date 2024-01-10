@@ -38,21 +38,29 @@ router.get('/', async (req, res) => {
     const categoriesByName = await Category.find({
       categoryName: { $regex: new RegExp(searchTerm, 'i') },
     });
-
     // Search in Categories model for subCategories
-    const categoriesBySubCategory = await Category.find({
-      'subCategories': { $regex: new RegExp(searchTerm, 'i') },
-    });
+    const categoriesBySubCategory = await Category.find(
+      { 'subCategories.subCategoryName': { $regex: new RegExp(searchTerm, 'i') } },
+      { 'subCategories.$': 1 } // Projection to include only the matched subcategory
+    );
+    console.log(categoriesBySubCategory,"sub");
 
     // Combine and send the results
     const results = {
-      products,
-      VendorInfos: enhancedVendorInfos,
-      categories: [...categoriesByName, ...categoriesBySubCategory],
+      vendorInfos: enhancedVendorInfos,
+      categories: categoriesByName,
+      subcategories: categoriesBySubCategory.reduce((acc, category) => {
+        // Extract matched subcategories from each category
+        const matchedSubcategories = category.subCategories.filter(subcategory =>
+          subcategory.subCategoryName.match(new RegExp(searchTerm, 'i'))
+        );
+    
+        // Add matched subcategories to the accumulator
+        return acc.concat(matchedSubcategories);
+      }, []),
     };
 
-
-    res.json({ success: true, data: results });
+    res.json(results );
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
