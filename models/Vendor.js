@@ -34,6 +34,15 @@ const vendorSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    validtill: {
+        type: Date,
+        default: Date.now,
+        required: true,
+    },
+    payment: {
+        type: Boolean,
+        default:false
+    },
    
 });
 

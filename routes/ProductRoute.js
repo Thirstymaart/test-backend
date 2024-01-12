@@ -24,6 +24,35 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+router.get('/get/:productName', async (req, res) => {
+  try {
+    const productName = req.params.productName;
+
+    // Create a case-insensitive regular expression for partial matching
+    const regex = new RegExp(productName, 'i');
+
+    // Assuming products have any of the fields name, name1, name2, or name3 containing a partial match with productName
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: regex } },
+        { name1: { $regex: regex } },
+        { name2: { $regex: regex } },
+        { name3: { $regex: regex } }
+      ]
+    });
+
+    if (!products || products.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 router.get('/vendorproducts', verifyToken, async (req, res) => {
   try {
     // Use Mongoose to query the products collection for the specific vendor

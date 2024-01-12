@@ -13,8 +13,32 @@ router.get('/', async (req, res) => {
     const products = await Product.find({
       $or: [
         { name: { $regex: new RegExp(searchTerm, 'i') } },
-        { description: { $regex: new RegExp(searchTerm, 'i') } },
+        { name1: { $regex: new RegExp(searchTerm, 'i') } },
+        { name2: { $regex: new RegExp(searchTerm, 'i') } },
+        { name3: { $regex: new RegExp(searchTerm, 'i') } },
       ],
+    });
+
+    // Transform the products array to the desired structure
+    const transformedProducts = products.map(product => {
+      const matchingFields = getMatchingFields(product, searchTerm);
+
+      const transformedProduct = {
+        _id: product._id,
+        vendor: product.vendor,
+        type: 'products',
+        subType: 'category',
+        category: product.category,
+        categorydesc: product.categorydesc,
+        price: product.price,
+        image: product.image,
+        size: product.size,
+        minqty: product.minqty,
+        additionalinfo: product.additionalinfo,
+        ...matchingFields,
+      };
+
+      return transformedProduct;
     });
 
     // Search in Vendor model
@@ -47,6 +71,7 @@ router.get('/', async (req, res) => {
 
     // Combine and send the results
     const results = {
+      transformedProducts,
       vendorInfos: enhancedVendorInfos,
       categories: categoriesByName,
       subcategories: categoriesBySubCategory.reduce((acc, category) => {
@@ -65,6 +90,26 @@ router.get('/', async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
+  
+  function getMatchingFields(product, searchTerm) {
+    const matchingFields = {};
+  
+    // Iterate through all possible name fields
+    for (let i = 1; i <= 3; i++) {
+      const fieldName = `name${i}`;
+      if (product[fieldName] && product[fieldName].toLowerCase().includes(searchTerm.toLowerCase())) {
+        matchingFields.name = product[fieldName];
+        matchingFields.description = product[`description${i}`];
+        matchingFields.price = product[`price${i}`];
+        matchingFields.image = product[`image${i}`];
+        // Add other fields as needed
+        break; // Stop searching if a match is found
+      }
+    }
+  
+    return matchingFields;
+  }
+
 });
 
 module.exports = router;
