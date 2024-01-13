@@ -108,12 +108,12 @@ router.post('/callback', async (req, res) => {
     console.log(parsedResponse);
 
     // Find the vendor using the merchantTransactionId from the parsed response
-    const vendor = await Vendor.findOne({ paymentid: parsedResponse.merchantTransactionId });
+    const vendor = await Vendor.findOne({ paymentid: parsedResponse.data.merchantTransactionId });
 
-    console.log("befor",vendor);
-
+    
     // Update vendor details after a successful transaction
     if (vendor && parsedResponse.success) {
+      console.log("befor",vendor);
       // Update status, payment, and validtill fields
       vendor.status = parsedResponse.status;
       vendor.payment = true;
@@ -127,7 +127,7 @@ router.post('/callback', async (req, res) => {
       console.log("after",vendor);
 
     } else if (!vendor) {
-      console.error('Vendor not found for the given merchantTransactionId:', parsedResponse.merchantTransactionId);
+      console.error('Vendor not found for the given merchantTransactionId:', parsedResponse.data.merchantTransactionId);
     }
 
     // Additional processing if needed
