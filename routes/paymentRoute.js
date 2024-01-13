@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-let transactionCounter = 1016;
+let transactionCounter = 1017;
 
 function generateTransactionId() {
   const fixedPart = 'MAART';
@@ -45,14 +45,13 @@ router.post('/initiatepayment', async (req, res) => {
             merchantId: 'M22A5YJ135FZ1',
             merchantTransactionId: transactionId,
             amount: 100,
-            merchantUserId: 'USER123',
+            merchantUserId: requestBody.username,
             redirectUrl: 'https://thirstymaart.com/',
             redirectMode: 'REDIRECT',
             callbackUrl: 'https://thirstymaart.com/api/payment/callback',
             paymentInstrument: {
               type: 'PAY_PAGE',
             },
-            username: requestBody.username,
           };
           // Convert order details to Base64
           const base64Payload = Buffer.from(JSON.stringify(orderDetails)).toString('base64');
@@ -102,8 +101,10 @@ router.post('/callback', async (req, res) => {
     // Parse the decoded response
     const parsedResponse = JSON.parse(decodedResponse);
 
+    console.log(parsedResponse);
+
     // Use the username passed from the initiatepayment route
-    const vendor = await Vendor.findOne({ username: parsedResponse.username });
+    const vendor = await Vendor.findOne({ username: merchantUserId });
 
     // Update vendor details after a successful transaction
     if (vendor) {
