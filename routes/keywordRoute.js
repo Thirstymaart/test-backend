@@ -1,27 +1,60 @@
 const express = require('express');
 const router = express.Router();
-const { verifyAdminToken, verifyVendorToken  } = require('../middleware/authMiddleware');
-const Keyword = require('../models/Keywords');
+const { verifyAdminToken, verifyVendorToken } = require('../middleware/authMiddleware');
+const Keywords = require('../models/Keywords');
 const Vendorkeywords = require('../models/Vendorkeywords');
 
-// Route to add a keyword (requires admin token)
+
 router.post('/add', verifyAdminToken, async (req, res) => {
     try {
-        const { keywords, category, categoryName, subcategory } = req.body;
+        const { keywordsString, categoryName } = req.body;
 
-        const keyword = new Keyword({
-            keywords,
-            category,
-            categoryName, // Add categoryName here
-            subcategory,
-        });
+        // Convert the string of keywords to an array
+        const newKeywordsArray = keywordsString.split(',').map((keyword) => keyword.trim());
 
-        await keyword.save();
+        // Find the existing Keywords document for the specified category
+        let existingKeywords = await Keywords.findOne({ categoryName });
 
-        res.status(201).json({ message: 'Keyword added successfully' });
+        // If the category doesn't have existing keywords, create a new Keywords document
+        if (!existingKeywords) {
+            existingKeywords = new Keywords({
+                categoryName,
+                keywords: newKeywordsArray,
+            });
+        } else {
+            // Combine existing keywords with new keywords and remove duplicates
+            const updatedKeywordsArray = Array.from(new Set([...existingKeywords.keywords, ...newKeywordsArray]));
+
+            // Update the existing Keywords document with the combined keywords
+            existingKeywords.keywords = updatedKeywordsArray;
+        }
+
+        // Save the Keywords document to the database
+        await existingKeywords.save();
+
+        res.json({ success: true });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+router.get('/list/:categoryName', async (req, res) => {
+    try {
+        const { categoryName } = req.params;
+
+        // Find the Keywords document for the specified category name
+        const keywords = await Keywords.findOne({ categoryName });
+
+        if (!keywords) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+
+        res.json({ category: keywords.categoryName, keywords: keywords.keywords });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -55,32 +88,32 @@ router.post('/addvendorkeywords', verifyVendorToken, async (req, res) => {
 });
 
 
-router.post('/list', verifyVendorToken, async (req, res) => {
-    try {
-        const { category, subcategory } = req.body;
-        const vendorId = req.vendorId;
+// router.post('/list', verifyVendorToken, async (req, res) => {
+//     try {
+//         const { category, subcategory } = req.body;
+//         const vendorId = req.vendorId;
 
-        // Find keywords based on category and subcategory match
-        const keywords = await Keyword.find({subcategory });
+//         // Find keywords based on category and subcategory match
+//         const keywords = await Keyword.find({subcategory });
 
-        if (keywords.length === 0) {
-            return res.status(404).json({ message: 'No keywords found for the specified category' });
-        }
+//         if (keywords.length === 0) {
+//             return res.status(404).json({ message: 'No keywords found for the specified category' });
+//         }
 
-        // Extract relevant information for the response
-        const keywordData = keywords.map(keyword => ({
-            id: keyword._id,
-            subcategoryName: keyword.subcategory,
-            addDate: keyword.addDate,
-            keywords: keyword.keywords,
-        }));
+//         // Extract relevant information for the response
+//         const keywordData = keywords.map(keyword => ({
+//             id: keyword._id,
+//             subcategoryName: keyword.subcategory,
+//             addDate: keyword.addDate,
+//             keywords: keyword.keywords,
+//         }));
 
-        res.json(keywordData);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-});
+//         res.json(keywordData);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// });
 
 module.exports = router;
 

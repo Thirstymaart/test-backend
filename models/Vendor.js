@@ -36,12 +36,13 @@ const vendorSchema = new mongoose.Schema({
     },
     validtill: {
         type: Date,
-        default: Date.now,
-        required: true,
     },
     payment: {
         type: Boolean,
         default:false
+    },
+    id: {
+        type: String,
     },
    
 });

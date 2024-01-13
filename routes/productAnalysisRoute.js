@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ProductAnalysis = require('../models/ProductClick');
+const ButtonClick = require('../models/ButtonClick');
 const Vendor = require('../models/Vendor');
-const Product = require('../models/Products');
 const jwt = require('jsonwebtoken');
 
 const secretKey = 'AbdcshNA846Sjdfg';
@@ -26,68 +25,112 @@ const verifyToken = (req, res, next) => {
 };
 
 // Track product clicks 
-router.post('/track-click', async (req, res) => {
+// router.post('/track-click', async (req, res) => {
+//   try {
+//     const { productId, buttonName } = req.body;
+//     const currentDate = new Date().toDateString(); // Get the current date as a string
+
+//     // Find the product information based on the provided productId
+//     const product = await Product.findById(productId);
+
+//     if (!product) {
+//       return res.status(400).json({ message: 'Product not found' });
+//     }
+
+//     const vendorId = product.vendor; // Get the vendor ID from the product document
+
+//     // Find an entry for the product, current date, and vendor
+//     let analysisEntry = await ProductAnalysis.findOne({
+//       productId,
+//       date: currentDate,
+//       vendor: vendorId,
+//     });
+
+//     // If no entry exists, create a new one
+//     if (!analysisEntry) {
+//       analysisEntry = new ProductAnalysis({
+//         productId,
+//         date: currentDate,
+//         vendor: vendorId,
+//         shareClick: 0,
+//         whatsappClick: 0,
+//         callClick: 0,
+//         profileClick: 0,
+//         enquireClick: 0,
+//       });
+//     }
+
+//     // Update the analysisEntry based on the buttonName
+//     switch (buttonName) {
+//       case 'share':
+//         analysisEntry.shareClick++;
+//         break;
+//       case 'whatsapp':
+//         analysisEntry.whatsappClick++;
+//         break;
+//       case 'call':
+//         analysisEntry.callClick++;
+//         break;
+//       case 'profile':
+//         analysisEntry.profileClick++;
+//         break;
+//       case 'enquire':
+//         analysisEntry.enquireClick++;
+//         break;
+//       default:
+//         return res.status(400).json({ message: 'Invalid buttonName' });
+//     }
+
+//     await analysisEntry.save(); // Save the updated analysisEntry to the database
+
+//     return res.json({ message: 'Product click tracked successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// });
+
+router.post('/click', async (req, res) => {
   try {
-    const { productId, buttonName } = req.body;
-    const currentDate = new Date().toDateString(); // Get the current date as a string
+    const { vendorId, buttonName } = req.body;
 
-    // Find the product information based on the provided productId
-    const product = await Product.findById(productId);
-
-    if (!product) {
-      return res.status(400).json({ message: 'Product not found' });
+    // Find the vendor
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
     }
 
-    const vendorId = product.vendor; // Get the vendor ID from the product document
+    // Get the current date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Find an entry for the product, current date, and vendor
-    let analysisEntry = await ProductAnalysis.findOne({
-      productId,
-      date: currentDate,
-      vendor: vendorId,
-    });
+    // Find or create an entry for the vendor on the current day
+    let buttonClick = await ButtonClick.findOneAndUpdate(
+      { vendor: vendorId, date: today },
+      { $setOnInsert: { vendor: vendorId, date: today } },
+      { upsert: true, new: true }
+    );
 
-    // If no entry exists, create a new one
-    if (!analysisEntry) {
-      analysisEntry = new ProductAnalysis({
-        productId,
-        date: currentDate,
-        vendor: vendorId,
-        shareClick: 0,
-        whatsappClick: 0,
-        callClick: 0,
-        profileClick: 0,
-        enquireClick: 0,
-      });
-    }
-
-    // Update the analysisEntry based on the buttonName
+    // Use switch case to identify which button is pressed and increment that button field
     switch (buttonName) {
-      case 'share':
-        analysisEntry.shareClick++;
-        break;
-      case 'whatsapp':
-        analysisEntry.whatsappClick++;
-        break;
-      case 'call':
-        analysisEntry.callClick++;
-        break;
-      case 'profile':
-        analysisEntry.profileClick++;
-        break;
-      case 'enquire':
-        analysisEntry.enquireClick++;
+      case 'shareClick':
+      case 'whatsappClick':
+      case 'callClick':
+      case 'profileClick':
+      case 'enquireClick':
+        buttonClick[buttonName] += 1;
         break;
       default:
-        return res.status(400).json({ message: 'Invalid buttonName' });
+        return res.status(400).json({ error: 'Invalid buttonName' });
     }
 
-    await analysisEntry.save(); // Save the updated analysisEntry to the database
+    // Save the updated entry
+    await buttonClick.save();
 
-    return res.json({ message: 'Product click tracked successfully' });
+    res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

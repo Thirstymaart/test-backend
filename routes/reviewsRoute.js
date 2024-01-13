@@ -12,6 +12,8 @@ router.post('/add', verifyUserToken, async (req, res) => {
   try {
     const { vendorToken, rating, comment } = req.body;
 
+    console.log(req.body);
+
     // Decode the JWT token to get the vendor's ID
     const decodedToken = jwt.verify(vendorToken, 'AbdcshNA846Sjdfg'); 
     const vendorId = decodedToken.id;

@@ -22,7 +22,59 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Create a route to handle POST requests to store vendor information
+router.get('/all', async (req, res) => {
+  try {
+    // Fetch all vendors from the VendorInfo collection
+    const allVendorsInfo = await VendorInfo.find();
+
+    // Create an array to store the merged data for all vendors
+    const allVendorsData = [];
+
+    // Loop through each vendor in VendorInfo collection
+    for (const vendorInfo of allVendorsInfo) {
+      // Query Vendor collection using vendorId
+      const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+
+      if (vendor) {
+        // Merge data from VendorInfo and Vendor collections
+        const mergedData = {
+          vendorId: vendorInfo.vendorId,
+          // Add other fields from VendorInfo
+          gstNo: vendorInfo.gstNo,
+          panNo: vendorInfo.panNo,
+          category: vendorInfo.category,
+          subCategory: vendorInfo.subCategory,
+          companyName: vendorInfo.companyName,
+          workingHour: vendorInfo.workingHour,
+          address: vendorInfo.address,
+          logo: vendorInfo.logo,
+          nature: vendorInfo.nature,
+          serviceAria: vendorInfo.serviceAria,
+          yearofestablishment: vendorInfo.yearofestablishment,
+          maplink: vendorInfo.maplink,
+
+          // Add fields from Vendor
+          name: vendor.name,
+          email: vendor.email,
+          // Include phone number from Vendor collection
+          phone: vendor.phoneNo,
+          city: vendor.city,
+          username: vendor.username,
+        };
+
+        // Push the merged data to the array
+        allVendorsData.push(mergedData);
+      }
+    }
+
+    // Return the list of all vendors with merged data in the response
+    res.status(200).json(allVendorsData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while fetching vendors' });
+  }
+});
+
 router.post('/add', verifyToken, async (req, res) => {
   try {
     // The verifyToken middleware has already extracted the vendorId from the token
@@ -208,4 +260,5 @@ router.get('/get', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching vendor information' });
   }
 });
+
 module.exports = router;

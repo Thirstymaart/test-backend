@@ -31,6 +31,9 @@ const ProfileHome = new Schema({
   linkedin: {
     type: String,
   },
+  brochure: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('Profilehome', ProfileHome);

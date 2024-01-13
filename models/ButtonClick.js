@@ -1,15 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const ProductClickSchema = new Schema({
+const ButtonClickSchema = new Schema({
   vendor: {
     type: Schema.Types.ObjectId,
     ref: 'Vendor', // Reference to the vendor who registered the product
-    required: true,
-  },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product', // Reference to the Product model
     required: true,
   },
   date: {
@@ -38,4 +33,4 @@ const ProductClickSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model('ProductClick', ProductClickSchema);
+module.exports = mongoose.model('ButtonClick', ButtonClickSchema);

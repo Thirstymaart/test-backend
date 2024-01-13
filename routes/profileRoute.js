@@ -56,6 +56,7 @@ router.post('/home', authenticateToken, async (req, res) => {
             instagram,
             youtube,
             linkedin,
+            brochure,
         } = req.body;
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
@@ -75,6 +76,7 @@ router.post('/home', authenticateToken, async (req, res) => {
             existingProfile.instagram = instagram;
             existingProfile.youtube = youtube;
             existingProfile.linkedin = linkedin;
+            existingProfile.brochure = brochure;
 
             // Save the updated profile
             const updatedProfile = await existingProfile.save();
@@ -90,6 +92,7 @@ router.post('/home', authenticateToken, async (req, res) => {
                 instagram,
                 youtube,
                 linkedin,
+                brochure,
 
             });
 
@@ -128,6 +131,7 @@ router.get('/gethome', authenticateToken, async (req, res) => {
                 instagram: profile.instagram,
                 youtube: profile.youtube,
                 linkedin: profile.linkedin,
+                brochure: profile.brochure,
 
             },
         });

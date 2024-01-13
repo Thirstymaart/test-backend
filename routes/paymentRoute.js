@@ -7,18 +7,25 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-const orderDetails = {
-  merchantId: 'M22A5YJ135FZ1',
-  merchantTransactionId: 'ORDER300011',
-  amount: 1,
-  merchantUserId: 'USER123',
-  redirectUrl: 'https://your-redirect-url.com',
-  redirectMode: 'REDIRECT',
-  callbackUrl: 'https://your-callback-url.com',
-  paymentInstrument: {
-    type: 'PAY_PAGE',
-  },
-};
+let transactionCounter = 1000;
+
+function generateTransactionId() {
+  const fixedPart = 'MAART';
+  
+  // Increment the counter for each new transaction
+  transactionCounter++;
+
+  // Get current date in DDMMYYYY format
+  const currentDate = new Date();
+  const day = currentDate.getDate().toString().padStart(2, '0');
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+  const year = currentDate.getFullYear();
+
+  // Concatenate all parts to form the transaction ID
+  const transactionId = `${fixedPart}${transactionCounter}${day}${month}${year}`;
+
+  return transactionId;
+}
 
 // API Key details
 const apiKey = '7c7b8094-89cb-452a-a797-a316e8a1d1ed';
@@ -36,6 +43,20 @@ router.post('/initiatepayment', async (req, res) => {
       if (vendor.validtill) {
         if (vendor.validtill < new Date()) {
           console.log("vendor");
+          const transactionId = generateTransactionId();
+          const orderDetails = {
+            merchantId: 'M22A5YJ135FZ1',
+            merchantTransactionId: transactionId,
+            amount: 100,
+            merchantUserId: 'USER123',
+            redirectUrl: 'https://thirstymaart.com/',
+            redirectMode: 'REDIRECT',
+            callbackUrl: 'https://thirstymaart.com/api/payment/callback',
+            paymentInstrument: {
+              type: 'PAY_PAGE',
+            },
+            username: requestBody.username,
+          };
           // Convert order details to Base64
           const base64Payload = Buffer.from(JSON.stringify(orderDetails)).toString('base64');
 
@@ -79,6 +100,37 @@ router.post('/initiatepayment', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 
+});
+
+router.post('/callback', async (req, res) => {
+  const responseBody = req.body;
+
+  try {
+    // Decode the response from PhonePe (assuming it's Base64 encoded)
+    const decodedResponse = Buffer.from(responseBody.response, 'base64').toString('utf-8');
+
+    // Parse the decoded response
+    const parsedResponse = JSON.parse(decodedResponse);
+
+    // Use the username passed from the initiatepayment route
+    const vendor = await Vendor.findOne({ username: parsedResponse.username });
+
+    // Update vendor details after a successful transaction
+    if (vendor) {
+      await vendor.updateAfterSuccessfulTransaction(parsedResponse.transactionId);
+    } else {
+      console.error('Vendor not found for the given username:', parsedResponse.username);
+    }
+
+    // Additional processing if needed
+    // ...
+
+    res.json({ success: true, message: 'Callback received and processed successfully' });
+
+  } catch (error) {
+    console.error('Error processing callback:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
 });
 
 // Function to calculate X-VERIFY header

@@ -5,16 +5,7 @@ const keywordSchema = new mongoose.Schema({
         type: Array,
         required: true,
     },
-    category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Categories',
-        required: true,
-    },
     categoryName: {
-        type: String, // Add this field for the category name
-        required: true,
-    },
-    subcategory: {
         type: String,
         required: true,
     },
