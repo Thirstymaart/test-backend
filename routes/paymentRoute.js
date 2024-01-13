@@ -41,7 +41,7 @@ router.post('/initiatepayment', async (req, res) => {
     if (vendor) {
       const transactionId = generateTransactionId();
       console.log(transactionId);
-      vendor.id = transactionId;
+      vendor.paymentid = transactionId;
       await vendor.save();
 
       const orderDetails = {
@@ -108,7 +108,7 @@ router.post('/callback', async (req, res) => {
     console.log(parsedResponse);
 
     // Find the vendor using the merchantTransactionId from the parsed response
-    const vendor = await Vendor.findOne({ id: parsedResponse.merchantTransactionId });
+    const vendor = await Vendor.findOne({ paymentid: parsedResponse.merchantTransactionId });
 
     console.log("befor",vendor);
 

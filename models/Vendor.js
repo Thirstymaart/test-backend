@@ -34,7 +34,7 @@ const vendorSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    id: {
+    paymentid: {
         type: String,
     },
     validtill: {
