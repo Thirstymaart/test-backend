@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-let transactionCounter = 1000;
+let transactionCounter = 1016;
 
 function generateTransactionId() {
   const fixedPart = 'MAART';
@@ -35,13 +35,10 @@ const keyIndex = '1';
 router.post('/initiatepayment', async (req, res) => {
   const requestBody = req.body;
   try {
-    let vendor = await Vendor.findOne({
-      username: requestBody.username,
-    });
+    console.log(requestBody);
+    let vendor = await Vendor.findOne({username: requestBody.username,});
 
     if (vendor) {
-      if (vendor.validtill) {
-        if (vendor.validtill < new Date()) {
           console.log("vendor");
           const transactionId = generateTransactionId();
           const orderDetails = {
@@ -84,13 +81,6 @@ router.post('/initiatepayment', async (req, res) => {
 
           res.json(responseData);
 
-
-        } else {
-          return res.status(400).json({ error: "Already Paid" });
-        }
-      } else {
-        return res.status(400).json({ error: "Validity not found" });
-      }
     } else {requestBody
       return res.status(400).json({ error: "User not found" });
     }
