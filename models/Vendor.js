@@ -34,6 +34,9 @@ const vendorSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    id: {
+        type: String,
+    },
     validtill: {
         type: Date,
     },
@@ -41,7 +44,7 @@ const vendorSchema = new mongoose.Schema({
         type: Boolean,
         default:false
     },
-    id: {
+    status: {
         type: String,
     },
    

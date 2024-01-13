@@ -7,11 +7,11 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-let transactionCounter = 1017;
+let transactionCounter = 1018;
 
 function generateTransactionId() {
   const fixedPart = 'MAART';
-  
+
   // Increment the counter for each new transaction
   transactionCounter++;
 
@@ -36,51 +36,55 @@ router.post('/initiatepayment', async (req, res) => {
   const requestBody = req.body;
   try {
     console.log(requestBody);
-    let vendor = await Vendor.findOne({username: requestBody.username,});
+    let vendor = await Vendor.findOne({ username: requestBody.username, });
 
     if (vendor) {
-          console.log("vendor");
-          const transactionId = generateTransactionId();
-          const orderDetails = {
-            merchantId: 'M22A5YJ135FZ1',
-            merchantTransactionId: transactionId,
-            amount: 100,
-            merchantUserId: requestBody.username,
-            redirectUrl: 'https://thirstymaart.com/',
-            redirectMode: 'REDIRECT',
-            callbackUrl: 'https://thirstymaart.com/api/payment/callback',
-            paymentInstrument: {
-              type: 'PAY_PAGE',
-            },
-          };
-          // Convert order details to Base64
-          const base64Payload = Buffer.from(JSON.stringify(orderDetails)).toString('base64');
+      const transactionId = generateTransactionId();
+      console.log(transactionId);
+      vendor.id = transactionId;
+      await vendor.save();
 
-          // Calculate X-VERIFY header
-          const xVerifyHeader = calculateXVerify(base64Payload);
+      const orderDetails = {
+        merchantId: 'M22A5YJ135FZ1',
+        merchantTransactionId: transactionId,
+        amount: 100,
+        merchantUserId: requestBody.username,
+        redirectUrl: 'https://thirstymaart.com/',
+        redirectMode: 'REDIRECT',
+        callbackUrl: 'https://thirstymaart.com/api/payment/callback',
+        paymentInstrument: {
+          type: 'PAY_PAGE',
+        },
+      };
+      // Convert order details to Base64
+      const base64Payload = Buffer.from(JSON.stringify(orderDetails)).toString('base64');
 
-          // PhonePe API URL
-          const apiUrl = 'https://api.phonepe.com/apis/hermes/pg/v1/pay';
+      // Calculate X-VERIFY header
+      const xVerifyHeader = calculateXVerify(base64Payload);
 
-          // Make API request using fetch
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-VERIFY': xVerifyHeader,
-            },
-            body: JSON.stringify({
-              request: base64Payload,
-            }),
-          });
+      // PhonePe API URL
+      const apiUrl = 'https://api.phonepe.com/apis/hermes/pg/v1/pay';
 
-          // Parse the response
-          const responseData = await response.json();
-          console.log(responseData);
+      // Make API request using fetch
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-VERIFY': xVerifyHeader,
+        },
+        body: JSON.stringify({
+          request: base64Payload,
+        }),
+      });
 
-          res.json(responseData);
+      // Parse the response
+      const responseData = await response.json();
+      console.log(responseData);
 
-    } else {requestBody
+      res.json(responseData);
+
+    } else {
+      requestBody
       return res.status(400).json({ error: "User not found" });
     }
 
@@ -103,14 +107,24 @@ router.post('/callback', async (req, res) => {
 
     console.log(parsedResponse);
 
-    // Use the username passed from the initiatepayment route
-    const vendor = await Vendor.findOne({ username: merchantUserId });
+    // Find the vendor using the merchantTransactionId from the parsed response
+    const vendor = await Vendor.findOne({ id: parsedResponse.merchantTransactionId });
 
     // Update vendor details after a successful transaction
-    if (vendor) {
-      await vendor.updateAfterSuccessfulTransaction(parsedResponse.transactionId);
-    } else {
-      console.error('Vendor not found for the given username:', parsedResponse.username);
+    if (vendor && parsedResponse.success) {
+      // Update status, payment, and validtill fields
+      vendor.status = parsedResponse.status;
+      vendor.payment = true;
+      
+      // Set validtill to 1 year from now
+      const currentDate = new Date();
+      vendor.validtill = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
+
+      // Save the updated vendor details
+      await vendor.save();
+
+    } else if (!vendor) {
+      console.error('Vendor not found for the given merchantTransactionId:', parsedResponse.merchantTransactionId);
     }
 
     // Additional processing if needed
@@ -123,6 +137,7 @@ router.post('/callback', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 
 // Function to calculate X-VERIFY header
 function calculateXVerify(payload) {
