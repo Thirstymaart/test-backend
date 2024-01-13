@@ -110,18 +110,21 @@ router.post('/callback', async (req, res) => {
     // Find the vendor using the merchantTransactionId from the parsed response
     const vendor = await Vendor.findOne({ id: parsedResponse.merchantTransactionId });
 
+    console.log("befor",vendor);
+
     // Update vendor details after a successful transaction
     if (vendor && parsedResponse.success) {
       // Update status, payment, and validtill fields
       vendor.status = parsedResponse.status;
       vendor.payment = true;
-      
+
       // Set validtill to 1 year from now
       const currentDate = new Date();
       vendor.validtill = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
 
       // Save the updated vendor details
       await vendor.save();
+      console.log("after",vendor);
 
     } else if (!vendor) {
       console.error('Vendor not found for the given merchantTransactionId:', parsedResponse.merchantTransactionId);
