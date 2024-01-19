@@ -18,18 +18,31 @@ router.get('/', async (req, res) => {
         { name3: { $regex: new RegExp(searchTerm, 'i') } },
       ],
     });
-
+    
+    // Extract unique vendor IDs from the products
+    const vendorIds = Array.from(new Set(products.map(product => product.vendor)));
+    
+    // Fetch vendor information from the vendors collection
+    const vendors = await Vendor.find({ _id: { $in: vendorIds } });
+    
+    // Create a map for quick lookup
+    const vendorMap = new Map(vendors.map(vendor => [vendor._id.toString(), vendor]));
+    
     // Transform the products array to the desired structure
     const transformedProducts = products.map(product => {
       const matchingFields = getMatchingFields(product, searchTerm);
-
+    
+      // Get the vendor information from the map based on the product's vendor ID
+      const vendorInfo = vendorMap.get(product.vendor.toString());
+    
       const transformedProduct = {
         _id: product._id,
-        vendor: product.vendor,
+        vendor:  vendorInfo,
         type: 'products',
         subType: 'category',
         category: product.category,
         categorydesc: product.categorydesc,
+        name: product.name,
         price: product.price,
         image: product.image,
         size: product.size,
@@ -37,7 +50,7 @@ router.get('/', async (req, res) => {
         additionalinfo: product.additionalinfo,
         ...matchingFields,
       };
-
+    
       return transformedProduct;
     });
 

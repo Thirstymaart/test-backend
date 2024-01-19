@@ -24,6 +24,25 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+function getMatchingFields(product, searchTerm) {
+  const matchingFields = {};
+
+  // Iterate through all possible name fields
+  for (let i = 1; i <= 3; i++) {
+    const fieldName = `name${i}`;
+    if (product[fieldName] && product[fieldName].toLowerCase().includes(searchTerm.toLowerCase())) {
+      matchingFields.name = product[fieldName];
+      matchingFields.description = product[`description${i}`];
+      matchingFields.price = product[`price${i}`];
+      matchingFields.image = product[`image${i}`];
+      // Add other fields as needed
+      break; // Stop searching if a match is found
+    }
+  }
+
+  return matchingFields;
+}
+
 router.get('/get/:productName', async (req, res) => {
   try {
     const productName = req.params.productName;
@@ -45,12 +64,67 @@ router.get('/get/:productName', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(products);
+    // Extract unique vendor IDs from the products
+    const vendorIds = Array.from(new Set(products.map(product => product.vendor)));
+
+    // Fetch vendor information from the vendors collection
+    const vendorDetails = await Vendor.find({ _id: { $in: vendorIds } });
+
+    // Create a map for quick lookup
+    const vendorDetailsMap = new Map(vendorDetails.map(vendor => [vendor._id.toString(), vendor]));
+
+    // Fetch additional vendor information from the vendorinfo collection
+    const vendorInfoDetails = await Vendorinfo.find({ vendorId: { $in: vendorIds } });
+    
+    // Create a map for quick lookup of vendorinfo details
+    const vendorInfoDetailsMap = new Map(vendorInfoDetails.map(info => [info.vendorId.toString(), info]));
+    
+
+    // Transform the products array to include vendor information and additional vendorinfo details
+    const transformedProducts = products.map(product => {
+      const matchingFields = getMatchingFields(product, productName);
+
+      // Get the vendor information from the map based on the product's vendor ID
+      const vendorDetailsInfo = vendorDetailsMap.get(product.vendor.toString());
+
+      // Get additional vendorinfo details from the map based on the product's vendor ID
+      const vendorInfoDetails = vendorInfoDetailsMap.get(product.vendor.toString());
+
+      return {
+        _id: product._id,
+        vendor: {
+          id: vendorDetailsInfo._id,
+          name: vendorDetailsInfo.name,
+          phoneNo: vendorDetailsInfo.phoneNo,
+          city: vendorDetailsInfo.city,
+          username: vendorDetailsInfo.username,
+          email: vendorDetailsInfo.email,
+        },
+        type: 'products',
+        subType: 'category',
+        category: product.category,
+        categorydesc: product.categorydesc,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        size: product.size,
+        minqty: product.minqty,
+        additionalinfo: product.additionalinfo,
+        vendorInfoDetails: {
+          companyName: vendorInfoDetails.companyName,
+          address: vendorInfoDetails.address,
+        },
+        ...matchingFields,
+      };
+    });
+
+    res.json(transformedProducts);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 
 router.get('/vendorproducts', verifyToken, async (req, res) => {
