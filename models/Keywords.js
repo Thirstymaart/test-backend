@@ -1,20 +1,19 @@
+// models/keywordModel.js
 const mongoose = require('mongoose');
 
 const keywordSchema = new mongoose.Schema({
-    keywords: {
-        type: Array,
-        required: true,
+  category: { type: String, required: true },
+  keywords: [
+    {
+      keyword: { type: String, required: true },
+      searchVolume: { type: Number, required: true },
     },
-    categoryName: {
-        type: String,
-        required: true,
-    },
-    addDate: {
-        type: Date,
-        default: Date.now,
-        required: true,
-    },
+  ],
+  addDate: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Keywords', keywordSchema);
+const Keyword = mongoose.model('Keywords', keywordSchema);
+
+module.exports = Keyword;
+
 
