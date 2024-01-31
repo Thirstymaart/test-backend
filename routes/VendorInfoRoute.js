@@ -75,6 +75,63 @@ router.get('/all', async (req, res) => {
   }
 });
 
+router.get('/list/:subcategory', async (req, res) => {
+  try {
+    const subcategory = req.params.subcategory;
+
+    // Fetch vendors with the specified subcategory from the VendorInfo collection
+    const vendorsWithSubcategory = await VendorInfo.find({
+      subCategory: subcategory,
+    });
+
+    // Create an array to store the merged data for vendors with the specified subcategory
+    const vendorsDataWithSubcategory = [];
+
+    // Loop through each vendor with the specified subcategory
+    for (const vendorInfo of vendorsWithSubcategory) {
+      // Query Vendor collection using vendorId
+      const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+
+      if (vendor) {
+        // Merge data from VendorInfo and Vendor collections
+        const mergedData = {
+          vendorId: vendorInfo.vendorId,
+          // Add other fields from VendorInfo
+          gstNo: vendorInfo.gstNo,
+          panNo: vendorInfo.panNo,
+          category: vendorInfo.category,
+          subCategory: vendorInfo.subCategory,
+          companyName: vendorInfo.companyName,
+          workingHour: vendorInfo.workingHour,
+          address: vendorInfo.address,
+          logo: vendorInfo.logo,
+          nature: vendorInfo.nature,
+          serviceAria: vendorInfo.serviceAria,
+          yearofestablishment: vendorInfo.yearofestablishment,
+          maplink: vendorInfo.maplink,
+
+          // Add fields from Vendor
+          name: vendor.name,
+          email: vendor.email,
+          // Include phone number from Vendor collection
+          phone: vendor.phoneNo,
+          city: vendor.city,
+          username: vendor.username,
+        };
+
+        // Push the merged data to the array
+        vendorsDataWithSubcategory.push(mergedData);
+      }
+    }
+
+    // Return the list of vendors with the specified subcategory in the response
+    res.status(200).json(vendorsDataWithSubcategory);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while fetching vendors by subcategory' });
+  }
+});
+
 router.post('/add', verifyToken, async (req, res) => {
   try {
     // The verifyToken middleware has already extracted the vendorId from the token

@@ -202,6 +202,7 @@ router.post('/forgot-password', async (req, res) => {
           <body>
             <div className='mail' style="margin: 20px; padding: 4px; ">
               <h2>Thirsty Maart</h2>
+
               <p style="font-size: 16px; margin-bottom: 20px;">
                 Dear Thirsty Maart User,
               </p>
@@ -234,12 +235,13 @@ router.post('/forgot-password', async (req, res) => {
                 <br />
                 The Thirsty Maart Team
               </p>
+
               <a href="https://thirstymaart.com">
                 <img src="https://thirstymaart.com/api/uploads/category/logo.png" style="width:700px;" />
               </a>
+
             </div>
           </body>
-
         </html>`,
 
     };

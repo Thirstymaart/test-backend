@@ -195,27 +195,6 @@ router.get('/list', async (req, res) => {
   }
 });
 
-
-
-// router.get('/list', async (req, res) => {
-//   try {
-//     // Use Mongoose to query the products collection
-//     const products = await Product.find();
-
-//     // Create a JWT token for each product using its vendor ID
-//     const productsWithTokens = products.map(product => ({
-//       ...product.toJSON(),
-//       token: jwt.sign({ id: product.vendor }, secretKey)
-//     }));
-
-//     // Send the list of products with tokens as a JSON response
-//     res.json(productsWithTokens );
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
-
 router.get('/category/:category', async (req, res) => {
   try {
     const category = req.params.category;
