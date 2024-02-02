@@ -47,7 +47,7 @@ router.post('/initiatepayment', async (req, res) => {
       const orderDetails = {
         merchantId: 'M22A5YJ135FZ1',
         merchantTransactionId: transactionId,
-        amount: 100,
+        amount: 826000,
         merchantUserId: requestBody.username,
         redirectUrl: 'https://thirstymaart.com/',
         redirectMode: 'REDIRECT',
