@@ -11,6 +11,14 @@ const EnquiriesSchema = new Schema({
         type: Schema.Types.ObjectId,
         required: true,
     },
+    enqurymakerName: {
+        type: String,
+        required: true,
+    },
+    enqurymakerCity: {
+        type: String,
+        required: true,
+    },
     date: {
         type: Date,
         required: true,
@@ -32,6 +40,22 @@ const EnquiriesSchema = new Schema({
     },
     companyname: {
         type: String,
+    },
+    leadstatus: {
+        type: Boolean,
+        default: false
+    },
+    statusOfEnq: {
+        type: String,
+        default:"new"
+    },
+    followupStatus: {
+        type: Boolean,
+        default: false
+    },
+    followupDate: {
+        type: Date,
+        default : null
     },
 });
 

@@ -12,19 +12,22 @@ const fs = require('fs');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.post('/add', upload.single('csvFile'), async (req, res) => {
+router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
     try {
-        const { category } = req.body;
+        const { category } = req.params;
+        const { subcategory } = req.body;
+
+        console.log(category, subcategory);
 
         // Ensure category is provided
-        if (!category) {
+        if (!category || !subcategory) {
             return res.status(400).send({ error: 'Category is required in the request body.' });
         }
 
         // Access the CSV file buffer
         const buffer = req.file.buffer.toString('utf-8');
 
-        const existingKeywords = await Keyword.findOne({ category });
+        const existingKeywords = await Keyword.findOne({ subcategory });
 
         // Parse the CSV data
         const newKeywords = [];
@@ -58,11 +61,12 @@ router.post('/add', upload.single('csvFile'), async (req, res) => {
         // Check if category exists
         if (existingKeywords) {
             // Update existing entry
-            await Keyword.findOneAndUpdate({ category }, { keywords: uniqueKeywords });
+            await Keyword.findOneAndUpdate({ subcategory }, { keywords: uniqueKeywords });
         } else {
             // Save new entry
             await Keyword.create({
                 category,
+                subcategory,
                 keywords: uniqueKeywords,
             });
         }
@@ -74,12 +78,12 @@ router.post('/add', upload.single('csvFile'), async (req, res) => {
     }
 });
 
-router.get('/list/:category', async (req, res) => {
+router.get('/list/:subcategory', async (req, res) => {
     try {
-        const { category } = req.params;
+        const { subcategory } = req.params;
 
         // Find keywords for the specified category
-        const result = await Keyword.findOne({ category });
+        const result = await Keyword.findOne({ subcategory });
 
         // Check if category exists
         if (!result) {
@@ -120,9 +124,9 @@ router.delete('/delete/:category/:keyword', async (req, res) => {
     }
 });
 
-router.post('/add/:category', async (req, res) => {
+router.post('/addone/:subcategory', async (req, res) => {
     try {
-        const { category } = req.params;
+        const { subcategory } = req.params;
         const { keyword, searchVolume } = req.body;
 
         // Validate if keyword and searchVolume are present and valid
@@ -131,7 +135,7 @@ router.post('/add/:category', async (req, res) => {
         }
 
         // Find the document with the specified category
-        const existingKeywords = await Keyword.findOne({ category });
+        const existingKeywords = await Keyword.findOne({ subcategory });
 
         // Check if the category exists
         if (!existingKeywords) {
@@ -142,7 +146,7 @@ router.post('/add/:category', async (req, res) => {
         const updatedKeywords = [...existingKeywords.keywords, { keyword, searchVolume: parseInt(searchVolume) }];
 
         // Update the document with the new keywords array
-        await Keyword.findOneAndUpdate({ category }, { keywords: updatedKeywords });
+        await Keyword.findOneAndUpdate({ subcategory }, { keywords: updatedKeywords });
 
         res.status(200).send({ message: 'Keyword added successfully' });
     } catch (error) {

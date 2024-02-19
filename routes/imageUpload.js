@@ -9,7 +9,6 @@ const jwt = require('jsonwebtoken');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
 
   const token = req.headers.authorization?.split(' ')[1];
@@ -21,29 +20,6 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
-
-
-
-// router.post('/upload', upload.single('image'), async (req, res) => {
-//   const vendorId = "658fe6b01c4888e265f8294a" // Assuming vendorId is stored in JWT payload
-//   const folderPath = `./uploads/${vendorId}`;
-
-//   try {
-//     await fs.mkdir(folderPath, { recursive: true });
-
-//     const imageName = req.file.originalname;
-//     const imagePath = `${folderPath}/${imageName}`;
-//     await fs.writeFile(imagePath, req.file.buffer);
-
-//     // Construct the full URL including the server domain and path
-//     const fullUrl = `${imageName}`;
-
-//     res.json({ imageUrl: fullUrl });
-//   } catch (error) {
-//     console.error('Error uploading image:', error);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// });
 
 router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
     const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
@@ -64,7 +40,22 @@ router.post('/upload', verifyToken, upload.single('image'), async (req, res) => 
       console.error('Error uploading image:', error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
-  });
+});
+
+router.delete('/delete/:imageName', verifyToken, async (req, res) => {
+  const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
+  const folderPath = `./uploads/${vendorId}`;
+  const imageName = req.params.imageName;
+  const imagePath = `${folderPath}/${imageName}`;
+
+  try {
+    await fs.unlink(imagePath);
+    res.json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 
 module.exports = router;

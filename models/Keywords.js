@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 
 const keywordSchema = new mongoose.Schema({
   category: { type: String, required: true },
+  subcategory: { type: String, required: true },
   keywords: [
     {
       keyword: { type: String, required: true },

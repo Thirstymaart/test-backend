@@ -285,5 +285,53 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if email exists in User collection
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.json({ available: false });
+    }
+
+    // Check if email exists in Vendor collection
+    const vendor = await Vendor.findOne({ email });
+    if (vendor) {
+      return res.json({ available: false });
+    }
+
+    // If email doesn't exist in either collection, it's available
+    res.json({ available: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/check-username', async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    // Check if username exists in User collection
+    const user = await User.findOne({ username });
+    if (user) {
+      return res.json({ available: false });
+    }
+
+    // Check if username exists in Vendor collection
+    const vendor = await Vendor.findOne({ username });
+    if (vendor) {
+      return res.json({ available: false });
+    }
+
+    // If username doesn't exist in either collection, it's available
+    res.json({ available: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 module.exports = router;
