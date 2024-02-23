@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const csvWriter = require('csv-writer').createObjectCsvWriter;
+const fs = require('fs');
+const { parse } = require('json2csv');
 
 const Enquiries = require('../models/Enquiries');
 const User = require('../models/User');
@@ -323,6 +326,92 @@ router.get('/closed-enquiries', verifyVendorToken, async (req, res) => {
         
         // Return the fetched "hot" enquiries
         res.status(200).json(hotEnquiries);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// router.get('/export-enquiries', verifyVendorToken, async (req, res) => {
+//     try {
+//         const vendorId = req.vendorId;
+//         const { startDate, endDate } = req.query;
+
+//         // Query enquiries within the specified date range
+//         const enquiries = await Enquiries.find({
+//             vendor: vendorId,
+//             date: { $gte: new Date(startDate), $lte: new Date(endDate) }
+//         });
+
+//         // Prepare data for CSV
+//         const csvData = enquiries.map(enquiry => ({
+//             // Map enquiry properties to CSV columns
+//             enqurymaker: enquiry.enqurymakerName,
+//             productname: enquiry.productname,
+//             date: enquiry.date.toISOString().split('T')[0], // Format date as YYYY-MM-DD
+//             enqurymakerCity: enquiry.enqurymakerCity,
+//             phonenumber: enquiry.phonenumber,
+//         }));
+
+//         // Set CSV file path
+//         const filePath = './enquiries.csv';
+
+//         // Create CSV writer
+//         const writer = csvWriter({
+//             path: filePath,
+//             header: [
+//                 // Define CSV header columns
+//                 { id: 'enqurymaker', title: 'Enquiry Maker' },
+//                 { id: 'productname', title: 'Product Name' },
+//                 { id: 'date', title: 'Date' },
+//                 { id: 'enqurymakerCity', title: 'Enquiry Maker City' },
+//                 { id: 'phonenumber', title: 'Phone Number' },
+//             ]
+//         });
+
+//         // Write data to CSV file
+//         await writer.writeRecords(csvData);
+
+//         // Stream the CSV file as a response
+//         res.setHeader('Content-Type', 'text/csv');
+//         res.attachment('enquiries.csv');
+//         fs.createReadStream(filePath).pipe(res);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
+
+
+
+router.get('/export-enquiries', verifyVendorToken, async (req, res) => {
+    try {
+        const vendorId = req.vendorId;
+        const { startDate, endDate } = req.query;
+
+        // Query enquiries within the specified date range
+        const enquiries = await Enquiries.find({
+            vendor: vendorId,
+            date: { $gte: new Date(startDate), $lte: new Date(endDate) }
+        });
+
+        // Prepare data for CSV
+        const csvData = parse(enquiries, {
+            fields: [
+                { label: 'Name', value: 'enqurymakerName' },
+                { label: 'Product Name', value: 'productname' },
+                { label: 'Date', value: 'date' },
+                { label: 'City', value: 'enqurymakerCity' },
+                { label: 'Phone Number', value: 'phonenumber' }
+            ]
+        });
+
+        // Set headers for CSV response
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=enquiries.csv');
+
+        // Send CSV data to frontend
+        res.send(csvData);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });

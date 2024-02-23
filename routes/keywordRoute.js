@@ -87,7 +87,7 @@ router.get('/list/:subcategory', async (req, res) => {
 
         // Check if category exists
         if (!result) {
-            return res.status(404).send({ error: 'Category not found' });
+            return res.status(404).send({ error: 'SubCategory not found' });
         }
 
         // Extract and send the list of keywords
