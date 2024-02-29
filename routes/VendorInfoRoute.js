@@ -75,13 +75,13 @@ router.get('/all', async (req, res) => {
   }
 });
 
-router.get('/list/:subcategory', async (req, res) => {
+router.get('/list/:category', async (req, res) => {
   try {
-    const subcategory = req.params.subcategory;
+    const category = req.params.category;
 
     // Fetch vendors with the specified subcategory from the VendorInfo collection
     const vendorsWithSubcategory = await VendorInfo.find({
-      subCategory: subcategory,
+      category: category,
     });
 
     // Create an array to store the merged data for vendors with the specified subcategory
