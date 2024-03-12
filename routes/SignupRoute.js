@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, phoneNo, city, password, role, username } = req.body;
+    const { name, email, phoneNo, city, password, role, username, companyName, gstNo, address } = req.body;
 
     // Hash the password
     const salt = await bcrypt.genSalt(10);
@@ -34,6 +34,9 @@ router.post('/signup', async (req, res) => {
         city,
         password: hashedPassword,
         username,
+        companyName, 
+        gstNo, 
+        address
 
       });
 
@@ -49,6 +52,7 @@ router.post('/signup', async (req, res) => {
         city,
         password: hashedPassword,
         username,
+        
 
       });
 
@@ -332,6 +336,5 @@ router.post('/check-username', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 module.exports = router;

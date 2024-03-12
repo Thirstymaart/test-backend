@@ -84,7 +84,7 @@ router.delete('/delete/:categoryId', async (req, res) => {
 });
 
 // List trending categories
-router.get('/trending', async (req, res) => {
+router.get('/trending/list', async (req, res) => {
   try {
     const trendingCategories = await Category.find({ trendingStatus: true });
     res.json(trendingCategories);

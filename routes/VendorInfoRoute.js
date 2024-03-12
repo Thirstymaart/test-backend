@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const VendorInfo = require('../models/VendorInfo');
@@ -72,6 +73,30 @@ router.get('/all', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'An error occurred while fetching vendors' });
+  }
+});
+
+router.get('/categories', async (req, res) => {
+  try {
+    // Fetch all vendors from the VendorInfo collection
+    const allVendorsInfo = await VendorInfo.find();
+
+    // Create a set to store unique category names
+    const categorySet = new Set();
+
+    // Loop through each vendor in VendorInfo collection
+    for (const vendorInfo of allVendorsInfo) {
+      // Add category to the set
+      categorySet.add(vendorInfo.category);
+    }
+
+    // Convert set to array, flatten the array and return
+    const categoriesArray = Array.from(categorySet).flat();
+    const uniqueList = removeDuplicates(categoriesArray);
+    res.status(200).json(uniqueList);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while fetching categories' });
   }
 });
 
@@ -317,5 +342,15 @@ router.get('/get', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching vendor information' });
   }
 });
+
+function removeDuplicates(array) {
+  const uniqueArray = [];
+  array.forEach(item => {
+    if (!uniqueArray.includes(item)) {
+      uniqueArray.push(item);
+    }
+  });
+  return uniqueArray;
+}
 
 module.exports = router;

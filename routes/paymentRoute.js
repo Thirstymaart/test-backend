@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-let transactionCounter = 1018;
+let transactionCounter = 1030;
 
 function generateTransactionId() {
   const fixedPart = 'MAART';
@@ -47,7 +47,7 @@ router.post('/initiatepayment', async (req, res) => {
       const orderDetails = {
         merchantId: 'M22A5YJ135FZ1',
         merchantTransactionId: transactionId,
-        amount: 826000,
+        amount: 100,
         merchantUserId: requestBody.username,
         redirectUrl: 'https://thirstymaart.com/',
         redirectMode: 'REDIRECT',
@@ -121,7 +121,7 @@ router.post('/callback', async (req, res) => {
       // Set validtill to 1 year from now
       const currentDate = new Date();
       vendor.validtill = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
-
+      vendor.paymentDate = currentDate;
       // Save the updated vendor details
       await vendor.save();
       console.log("after",vendor);

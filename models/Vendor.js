@@ -34,10 +34,22 @@ const vendorSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    companyName: {
+        type: String,
+    },
+    gstNo: {
+        type: String,
+    },
+    address: {
+        type: String,
+    },
     paymentid: {
         type: String,
     },
     validtill: {
+        type: Date,
+    },
+    paymentDate: {
         type: Date,
     },
     payment: {

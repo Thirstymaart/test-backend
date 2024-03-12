@@ -12,6 +12,76 @@ const fs = require('fs');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
+//     try {
+//         const { category } = req.params;
+//         const { subcategory } = req.body;
+
+//         console.log(category, subcategory);
+
+//         // Ensure category is provided
+//         if (!category || !subcategory) {
+//             return res.status(400).send({ error: 'Category is required in the request body.' });
+//         }
+//         console.log('Uploaded file:', req.file);
+
+//         // Access the CSV file buffer
+//         const buffer = req.file.buffer.toString('utf-8');
+
+//         const existingKeywords = await Keyword.findOne({ subcategory });
+
+//         // Parse the CSV data
+//         const newKeywords = [];
+//         buffer
+//             .split('\n')
+//             .forEach((row) => {
+//                 const [keyword, searchVolume] = row.split(',');
+
+//                 // Check if keyword and searchVolume are present and valid
+//                 if (keyword && !isNaN(searchVolume)) {
+//                     newKeywords.push({
+//                         keyword,
+//                         searchVolume: parseInt(searchVolume),
+//                     });
+
+//                 }
+//             });
+
+//             console.log('Keywords in the file:', newKeywords);
+
+//         // Filter out existing keywords from the new keywords
+//         const uniqueNewKeywords = newKeywords.filter(newKeyword => {
+//             return !existingKeywords || !existingKeywords.keywords.some(existingKeyword =>
+//                 existingKeyword.keyword === newKeyword.keyword
+//             );
+//         });
+
+//         // Combine existing and filtered new keywords
+//         const allKeywords = existingKeywords ? [...existingKeywords.keywords, ...uniqueNewKeywords] : uniqueNewKeywords;
+
+//         // Use a set to remove duplicates
+//         const uniqueKeywords = Array.from(new Set(allKeywords.map(JSON.stringify))).map(JSON.parse);
+
+//         // Check if category exists
+//         if (existingKeywords) {
+//             // Update existing entry
+//             await Keyword.findOneAndUpdate({ subcategory }, { keywords: uniqueKeywords });
+//         } else {
+//             // Save new entry
+//             await Keyword.create({
+//                 category,
+//                 subcategory,
+//                 keywords: uniqueKeywords,
+//             });
+//         }
+
+//         res.status(201).send({ message: 'Keywords added successfully' });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send({ error: 'Internal Server Error' });
+//     }
+// });
+
 router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
     try {
         const { category } = req.params;
@@ -27,23 +97,27 @@ router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
         // Access the CSV file buffer
         const buffer = req.file.buffer.toString('utf-8');
 
-        const existingKeywords = await Keyword.findOne({ subcategory });
-
         // Parse the CSV data
+        const lines = buffer.split('\n');
         const newKeywords = [];
-        buffer
-            .split('\n')
-            .forEach((row) => {
-                const [keyword, searchVolume] = row.split(',');
 
-                // Check if keyword and searchVolume are present and valid
-                if (keyword && !isNaN(searchVolume)) {
-                    newKeywords.push({
-                        keyword,
-                        searchVolume: parseInt(searchVolume),
-                    });
-                }
-            });
+        // Skip the header row if present
+        for (let i = 1; i < lines.length; i++) {
+            const [keyword, searchVolume] = lines[i].trim().split(',');
+
+            // Check if keyword and searchVolume are present and valid
+            if (keyword && !isNaN(searchVolume)) {
+                newKeywords.push({
+                    keyword,
+                    searchVolume: parseInt(searchVolume),
+                });
+            }
+        }
+
+        // Log keywords in the file being uploaded
+        console.log('Keywords in the file:', newKeywords);
+
+        const existingKeywords = await Keyword.findOne({ subcategory });
 
         // Filter out existing keywords from the new keywords
         const uniqueNewKeywords = newKeywords.filter(newKeyword => {

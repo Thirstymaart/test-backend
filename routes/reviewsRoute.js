@@ -47,11 +47,11 @@ router.get('/get', verifyVendorToken, async (req, res) => {
     const averageRating = totalRatings > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings : 0;
 
     const ratingCounts = {
-      '1': reviews.filter((review) => review.rating === 1).length,
-      '2': reviews.filter((review) => review.rating === 2).length,
-      '3': reviews.filter((review) => review.rating === 3).length,
-      '4': reviews.filter((review) => review.rating === 4).length,
-      '5': reviews.filter((review) => review.rating === 5).length,
+      'one': reviews.filter((review) => review.rating === 1).length,
+      'two': reviews.filter((review) => review.rating === 2).length,
+      'three': reviews.filter((review) => review.rating === 3).length,
+      'four': reviews.filter((review) => review.rating === 4).length,
+      'five': reviews.filter((review) => review.rating === 5).length,
     };
 
     const allRatings = [];
@@ -60,6 +60,7 @@ router.get('/get', verifyVendorToken, async (req, res) => {
       let userOrVendorName = 'Unknown';
 
       if (review.userId) {
+        console.log(review.userId);
         const user = await User.findById(review.userId).select('name');
         if (user) {
           userOrVendorName = user.name;
