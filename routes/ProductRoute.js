@@ -61,7 +61,7 @@ router.get('/get/:productName', async (req, res) => {
     });
 
     if (!products || products.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(404).json();
     }
 
     // Extract unique vendor IDs from the products
@@ -121,11 +121,9 @@ router.get('/get/:productName', async (req, res) => {
     res.json(transformedProducts);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json();
   }
 });
-
-
 
 router.get('/vendorproducts', verifyToken, async (req, res) => {
   try {
@@ -231,8 +229,6 @@ router.get('/category/:category', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
-
 
 router.post('/add', verifyToken, async (req, res) => {
   try {

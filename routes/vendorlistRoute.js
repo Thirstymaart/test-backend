@@ -38,7 +38,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
 
         if (username) {
             // Fetch data for the specified username
-            vendors = await Vendor.find({ username }, 'name username email phoneNo paymentid city payment validtill paymentDate');
+            vendors = await Vendor.find({ username }, 'name username email phoneNo paymentid city payment validtill paymentDate companyName gstNo address');
         } else {
             // Fetch data for all vendors
             console.log("vendor not found");
@@ -50,6 +50,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 // router.get('/invoices', verifyVendorToken, async (req, res) => {
 //     try {
 //         const { startDate, endDate } = req.query;
@@ -119,8 +120,5 @@ console.log(vendorInfos.length);
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
-
 
 module.exports = router;

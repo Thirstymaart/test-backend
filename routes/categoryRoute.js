@@ -29,7 +29,7 @@ router.get('/list', async (req, res) => {
 router.get('/:categoryName', async (req, res) => {
   try {
     const categoryName = req.params.categoryName;
-    const category = await Category.findOne({ categoryName });
+    const category = await Category.findOne({ categoryName: { $regex: new RegExp('^' + categoryName + '$', 'i') } });
 
     if (!category) {
       return res.status(404).json({ error: 'Category not found' });

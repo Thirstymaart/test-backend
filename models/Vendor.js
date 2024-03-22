@@ -54,12 +54,18 @@ const vendorSchema = new mongoose.Schema({
     },
     payment: {
         type: Boolean,
-        default:false
+        default: false
     },
     status: {
         type: String,
     },
-   
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpires: {
+        type: String,
+    }
+
 });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

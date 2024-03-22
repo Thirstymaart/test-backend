@@ -49,7 +49,7 @@ router.post('/initiatepayment', async (req, res) => {
         merchantTransactionId: transactionId,
         amount: 100,
         merchantUserId: requestBody.username,
-        redirectUrl: 'https://thirstymaart.com/',
+        redirectUrl: 'https://thirstymaart.com/invoice',
         redirectMode: 'REDIRECT',
         callbackUrl: 'https://thirstymaart.com/api/payment/callback',
         paymentInstrument: {

@@ -192,7 +192,7 @@ router.get('/s', async (req, res) => {
       if (vendor) {
         return {
           ...vendorInfo.toObject(),
-          vendorUsername: vendor.username,
+          vendorCity: vendor.city,
         };
       }
       return vendorInfo.toObject();

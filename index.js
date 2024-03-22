@@ -31,6 +31,8 @@ app.use("/api/admin", require("./routes/adminRoute"));
 app.use("/api/enquiries", require("./routes/enquiriesRoute"));
 app.use('/api/payment', require('./routes/paymentRoute'));
 app.use('/api/vendors', require('./routes/vendorlistRoute'));
+app.use('/api/newsletter', require('./routes/newsLatterRoute'));
+app.use('/api/email', require('./routes/emailRoute'));
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

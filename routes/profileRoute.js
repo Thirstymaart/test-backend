@@ -5,6 +5,7 @@ const ProfileHome = require('../models/ProfileHome');
 const ProfileAbout = require('../models/ProfileAbout');
 const ProfileWhyus = require('../models/ProfileWhyus');
 const Vendor = require('../models/Vendor');
+const VendorInfo = require('../models/VendorInfo');
 const { verifyVendorToken } = require('../middleware/authMiddleware');
 
 const authenticateToken = (req, res, next) => {
@@ -18,34 +19,74 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// router.post('/getprofile', async (req, res) => {
+//     try {
+//         const { username } = req.body;
+
+//         // Search for the vendor in the Vendor collection by username
+//         const vendor = await Vendor.findOne({ username });
+
+//         if (!vendor) {
+//             return res.status(404).json({ error: 'Vendor not found' });
+//         }
+
+//         // Get the vendor's ID
+//         const vendorId = vendor._id;
+
+//         // Create a token with the vendor's ID
+//         const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
+//             expiresIn: '24h',
+//         });
+
+//         // Send the token in the response
+//         res.json({ token });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
+
+// Route to handle profile data creation or update
+
 router.post('/getprofile', async (req, res) => {
     try {
-        const { username } = req.body;
+        const { city, companyName } = req.query;
 
-        // Search for the vendor in the Vendor collection by username
-        const vendor = await Vendor.findOne({ username });
+        // Convert city and companyName to case-insensitive regex patterns
+        const cityRegex = new RegExp(city, 'i');
+        const companyNameRegex = new RegExp(companyName, 'i');
 
-        if (!vendor) {
-            return res.status(404).json({ error: 'Vendor not found' });
+        if (!city || !companyName) {
+            console.log("city and Company name is requred");
+            return res.status(404).json({ error: 'city and Company name is requred' });
+        }
+        else {
+            // Search for the vendor in the Vendor collection by case-insensitive city and companyName
+            const vendor = await Vendor.findOne({ city: cityRegex, companyName: companyNameRegex });
+            if (!vendor) {
+                return res.status(404).json({ error: 'Vendor not found' });
+            }
+            // Get the vendor's ID from the found vendor document
+            const vendorId = vendor._id;
+    
+            // Create a token with the vendor's ID
+            const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
+                expiresIn: '24h',
+            });
+    
+            // Send the token in the response
+            res.json({ token });
         }
 
-        // Get the vendor's ID
-        const vendorId = vendor._id;
 
-        // Create a token with the vendor's ID
-        const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
-            expiresIn: '24h',
-        });
 
-        // Send the token in the response
-        res.json({ token });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Route to handle profile data creation or update
+
 router.post('/home', authenticateToken, async (req, res) => {
     try {
         const {
@@ -139,7 +180,7 @@ router.get('/gethome', authenticateToken, async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}); 
+});
 
 // Route to update profile about information for the authenticated vendor
 router.post('/about', authenticateToken, async (req, res) => {

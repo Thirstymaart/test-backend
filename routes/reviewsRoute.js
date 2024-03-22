@@ -72,7 +72,7 @@ router.get('/get', verifyVendorToken, async (req, res) => {
 
       allRatings.push({
         rating: review.rating,
-        comment: review.comment,
+        comment: review.comment, 
         createdAt: review.createdAt,
         userOrVendorName,
       });
