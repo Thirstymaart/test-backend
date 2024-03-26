@@ -6,6 +6,7 @@ const ProfileAbout = require('../models/ProfileAbout');
 const ProfileWhyus = require('../models/ProfileWhyus');
 const Vendor = require('../models/Vendor');
 const VendorInfo = require('../models/VendorInfo');
+const Product = require('../models/Products');
 const { verifyVendorToken } = require('../middleware/authMiddleware');
 
 const authenticateToken = (req, res, next) => {
@@ -68,12 +69,12 @@ router.post('/getprofile', async (req, res) => {
             }
             // Get the vendor's ID from the found vendor document
             const vendorId = vendor._id;
-    
+
             // Create a token with the vendor's ID
             const token = jwt.sign({ id: vendorId, role: 'vendor' }, 'AbdcshNA846Sjdfg', {
                 expiresIn: '24h',
             });
-    
+
             // Send the token in the response
             res.json({ token });
         }
@@ -85,7 +86,6 @@ router.post('/getprofile', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 
 router.post('/home', authenticateToken, async (req, res) => {
     try {
@@ -398,6 +398,50 @@ router.get('/getwhyus', verifyVendorToken, async (req, res) => {
     }
 });
 
+router.get('/profile-completion/:vendorId', async (req, res) => {
+    try {
+        const vendorId = req.params.vendorId;
+
+        // Example: Define criteria and weights for profile completion
+        const criteriaWeights = {
+            companyInfo: 0.2, // Weight for company info completeness
+            profileDetails: 0.6, // Weight for profile details completeness
+            products: 0.2, // Weight for products completeness
+        };
+
+        // Example: Calculate profile completion based on criteria and weights
+        let profileCompletion = 0;
+
+        // Calculate company info completeness from VendorInfo collection
+        const vendorInfo = await VendorInfo.findOne({ vendorId: vendorId });
+        if (vendorInfo && vendorInfo.companyName && vendorInfo.address) {
+            profileCompletion += criteriaWeights.companyInfo;
+        }
+        
+        // Calculate profile details completeness from ProfileHome, ProfileAbout, and ProfileWhyUs collections
+        const profileHome = await ProfileHome.findOne({ vendor: vendorId });
+        const profileAbout = await ProfileAbout.findOne({ vendor: vendorId });
+        const profileWhyUs = await ProfileWhyus.findOne({ vendor: vendorId });
+        
+        if (profileHome && profileHome.homeintro && profileAbout && profileAbout.aboutinto && profileWhyUs && profileWhyUs.mainHeading) {
+            profileCompletion += criteriaWeights.profileDetails;
+        }
+
+        // Calculate products completeness from Product collection (example: at least 3 products uploaded)
+        const productsCount = await Product.countDocuments({ vendor: vendorId });
+        if (productsCount >= 3) {
+            profileCompletion += criteriaWeights.products;
+        }
+
+        // Calculate overall profile completion percentage
+        const overallProgress = (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileDetails + criteriaWeights.products)) * 100;
+
+        res.json({ profileCompletion: overallProgress });
+    } catch (error) {
+        console.error('Error calculating profile completion:', error);
+        res.status(500).json({ error: 'Error calculating profile completion' });
+    }
+});
 
 
 module.exports = router;

@@ -84,8 +84,7 @@ router.post('/login', async (req, res) => {
             id: user._id,
             role: user.isVendor ? 'vendor' : 'user',
             name: user.name,
-            companyName: user.companyname,
-            username: user.username,
+            city: user.city,
           },
           secretKey,
           { expiresIn: '24h' }
@@ -95,7 +94,7 @@ router.post('/login', async (req, res) => {
           token,
           role: user.isVendor ? 'vendor' : 'user',
           name: user.name,
-          companyName: user.companyname,
+          city: user.city
         });
       }
     }
@@ -113,8 +112,8 @@ router.post('/login', async (req, res) => {
             id: vendor._id,
             role: 'vendor',
             name: vendor.name,
-            companyName: vendor.companyname,
-            username: vendor.username,
+            companyName: vendor.companyName,
+            city: vendor.city,
           },
           secretKey,
           { expiresIn: '24h' }
@@ -124,7 +123,8 @@ router.post('/login', async (req, res) => {
           token,
           role: 'vendor',
           name: vendor.name,
-          companyName: vendor.companyname,
+          companyName: vendor.companyName,
+          city: vendor.city,
         });
       }
     }

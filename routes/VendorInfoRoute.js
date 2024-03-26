@@ -4,6 +4,7 @@ const router = express.Router();
 const VendorInfo = require('../models/VendorInfo');
 const Vendor = require('../models/Vendor');
 const jwt = require('jsonwebtoken');
+const Fuse = require('fuse.js');
 
 const verifyToken = (req, res, next) => {
   const token = req.header('Authorization'); // Get the token from the 'Authorization' header
@@ -104,16 +105,26 @@ router.get('/list/:category', async (req, res) => {
   try {
     const category = req.params.category;
 
-    // Fetch vendors with the specified subcategory from the VendorInfo collection
-    const vendorsWithSubcategory = await VendorInfo.find({
-      category: category,
+    const allVendors = await VendorInfo.find();
+
+    // Initialize Fuse.js with the vendors data and fuzzy search options
+    const fuse = new Fuse(allVendors, {
+      keys: ['category'], // Specify the keys to search within (category in this case)
+      includeScore: true, // Include search score for ranking results
+      threshold: 0.3, // Adjust the threshold for fuzzy matching (lower values allow more flexibility)
     });
+
+    // Perform the fuzzy search on the category name
+    const searchResults = fuse.search(category);
+
+    // Extract the matched items from the search results
+    const matchedVendors = searchResults.map(result => result.item);
 
     // Create an array to store the merged data for vendors with the specified subcategory
     const vendorsDataWithSubcategory = [];
 
     // Loop through each vendor with the specified subcategory
-    for (const vendorInfo of vendorsWithSubcategory) {
+    for (const vendorInfo of matchedVendors) {
       // Query Vendor collection using vendorId
       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
 
@@ -157,11 +168,73 @@ router.get('/list/:category', async (req, res) => {
   }
 });
 
+router.get('/subcategories/:subCategory', async (req, res) => {
+  try {
+    const subCategory = req.params.subCategory;
+
+    // Find vendors where the subCategory array contains the specified subcategory
+    const vendorsWithSubcategory = await VendorInfo.find({ subCategory: subCategory });
+
+    if (!vendorsWithSubcategory || vendorsWithSubcategory.length === 0) {
+      return res.status(404).json({ message: false });
+    }
+
+    // Create an array to store the merged data for vendors with the specified subcategory
+    const vendorsDataWithSubcategory = [];
+
+    // Loop through each vendor with the specified subcategory
+    for (const vendorInfo of vendorsWithSubcategory) {
+      // Query Vendor collection using vendorId
+      const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+
+      if (vendor) {
+        // Merge data from VendorInfo and Vendor collections
+        const mergedData = {
+          vendorId: vendorInfo.vendorId,
+          // Add other fields from VendorInfo
+          gstNo: vendorInfo.gstNo,
+          panNo: vendorInfo.panNo,
+          category: vendorInfo.category,
+          subCategory: vendorInfo.subCategory,
+          companyName: vendorInfo.companyName,
+          workingHour: vendorInfo.workingHour,
+          address: vendorInfo.address,
+          logo: vendorInfo.logo,
+          nature: vendorInfo.nature,
+          serviceAria: vendorInfo.serviceAria,
+          yearofestablishment: vendorInfo.yearofestablishment,
+          maplink: vendorInfo.maplink,
+
+          // Add fields from Vendor
+          name: vendor.name,
+          email: vendor.email,
+          // Include phone number from Vendor collection
+          phone: vendor.phoneNo,
+          city: vendor.city,
+          username: vendor.username,
+        };
+
+        // Push the merged data to the array
+        vendorsDataWithSubcategory.push(mergedData);
+      }
+    }
+
+    // Return the list of vendors with the specified subcategory in the response
+    res.status(200).json({
+      message: true,
+      data: vendorsDataWithSubcategory
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: false });
+  }
+});
+
 router.post('/add', verifyToken, async (req, res) => {
   try {
     // The verifyToken middleware has already extracted the vendorId from the token
     const vendorId = req.vendorId;
-    
+
 
     // Check if a vendor with the provided vendorId already exists
     const existingVendor = await VendorInfo.findOne({ vendorId });
@@ -325,8 +398,8 @@ router.get('/get', verifyToken, async (req, res) => {
       serviceAria: vendorInfo.serviceAria,
       yearofestablishment: vendorInfo.yearofestablishment,
       maplink: vendorInfo.maplink,
-      
-      
+
+
       // Add fields from Vendor
       name: vendor.name,
       email: vendor.email,

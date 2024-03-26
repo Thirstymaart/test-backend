@@ -24,10 +24,25 @@ const categorySchema = new mongoose.Schema({
     trendingStatus: {
         type: Boolean,
     },
-    subCategories: {
-        type: Array,
-        required: true,
-    },
+    subCategories: [
+        {
+            subCategoryName: {
+                type: String,
+                required: true,
+            },
+            subCategoryDesc: {
+                type: String,
+                required: true,
+            },
+            subCategoryImage: {
+                type: String,
+                required: true,
+            }
+        }
+    ]
+
+
+
 });
 
 module.exports = mongoose.model('Categories', categorySchema);

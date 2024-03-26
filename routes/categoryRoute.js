@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Categories');
+const Fuse = require('fuse.js');
 
 // Add a new category
 router.post('/add', async (req, res) => {
@@ -42,31 +43,84 @@ router.get('/:categoryName', async (req, res) => {
   }
 });
 
+// router.get('/subcategories/:subCategoryName', async (req, res) => {
+//   try {
+//     const subCategoryName = req.params.subCategoryName;
+
+//     // Fetch all categories with their subcategories
+//     const allCategories = await Category.find({}, 'subCategories');
+
+//     // Flatten the subcategories into an array for fuzzy searching
+//     const allSubCategories = allCategories.reduce((acc, curr) => acc.concat(curr.subCategories), []);
+    
+
+//     // Initialize Fuse.js with the subcategories data and fuzzy search options
+//     const fuse = new Fuse(allSubCategories, {
+//       keys: ['subCategoryName'], // Specify the keys to search within (subCategoryName in this case)
+//       includeScore: true, // Include search score for ranking results
+//       threshold: 0.4, // Adjust the threshold for fuzzy matching (lower values allow more flexibility)
+//     });
+
+//     // Perform the fuzzy search on the subcategory name
+//     const searchResults = fuse.search(subCategoryName);
+
+//     if (searchResults.length === 0) {
+//       return res.status(404).json({ error: 'Subcategory not found' });
+//     }
+
+//     // Extract the best matched subcategory from the search results
+//     const bestMatch = searchResults[0].item;
+
+//     res.json(bestMatch);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
+
+// Delete a category by ID
+
 router.get('/subcategories/:subCategoryName', async (req, res) => {
   try {
     const subCategoryName = req.params.subCategoryName;
 
-    // Assuming subcategories have unique names across all categories
-    const category = await Category.findOne({ 'subCategories.subCategoryName': subCategoryName });
+    // Fetch all categories with their subcategories
+    const allCategories = await Category.find({}).populate('subCategories', 'subCategoryName', 'subCategoryDesc', 'subCategoryImage');
 
-    if (!category) {
+    // Flatten the subcategories into an array for fuzzy searching
+    const allSubCategories = allCategories.reduce((acc, curr) => {
+      return acc.concat(curr.subCategories.map(subCat => ({
+        categoryName: curr.categoryName, // Add categoryName to each subcategory object
+        subCategoryName: subCat.subCategoryName,
+        subCategoryDesc: subCat.subCategoryDesc,
+        subCategoryImage: subCat.subCategoryImage,
+      })));
+    }, []);
+
+    // Initialize Fuse.js with the subcategories data and fuzzy search options
+    const fuse = new Fuse(allSubCategories, {
+      keys: ['subCategoryName'], // Specify the keys to search within (subCategoryName in this case)
+      includeScore: true, // Include search score for ranking results
+      threshold: 0.4, // Adjust the threshold for fuzzy matching (lower values allow more flexibility)
+    });
+
+    // Perform the fuzzy search on the subcategory name
+    const searchResults = fuse.search(subCategoryName);
+
+    if (searchResults.length === 0) {
       return res.status(404).json({ error: 'Subcategory not found' });
     }
 
-    const subCategory = category.subCategories.find(sub => sub.subCategoryName === subCategoryName);
+    // Extract the best matched subcategory from the search results
+    const bestMatch = searchResults[0].item;
 
-    if (!subCategory) {
-      return res.status(404).json({ error: 'Subcategory not found' });
-    }
-
-    res.json(subCategory);
+    res.json(bestMatch);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Delete a category by ID
 router.delete('/delete/:categoryId', async (req, res) => {
     try {
       const categoryId = req.params.categoryId;

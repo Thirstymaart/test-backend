@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken'); // For handling JWTs
 const Product = require('../models/Products');
 const Vendorinfo = require('../models/VendorInfo');
 const Vendor = require('../models/Vendor');
+const fs = require('fs').promises; 
 
 const secretKey = 'AbdcshNA846Sjdfg';
 // Middleware to verify JWT and extract vendor ID
@@ -289,29 +290,69 @@ router.post('/add', verifyToken, async (req, res) => {
 });
 
 // Route to delete a product
-router.delete('/delete/:productId', verifyToken, async (req, res) => {
-  try {
-    const vendorId = req.vendorId; 
-    const productId = req.params.productId;
+// router.delete('/delete/:productId', verifyToken, async (req, res) => {
+//   try {
+//     const vendorId = req.vendorId; 
+//     const productId = req.params.productId;
 
-    // Check if the product with the given ID exists and belongs to the vendor
-    const product = await Product.findOne({ _id: productId, vendor: vendorId });
+//     // Check if the product with the given ID exists and belongs to the vendor
+//     const product = await Product.findOne({ _id: productId, vendor: vendorId });
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+//     if (!product) {
+//       return res.status(404).json({ error: 'Product not found' });
+//     }
 
-    // Delete the product using the deleteOne method
-    await Product.deleteOne({ _id: productId, vendor: vendorId });
+//     // Delete the product using the deleteOne method
+//     await Product.deleteOne({ _id: productId, vendor: vendorId });
 
-    res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+//     res.json({ message: 'Product deleted successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
 
 // Route to modify a product
+
+router.delete('/delete/:productId', verifyToken, async (req, res) => {
+  const vendorId = req.vendorId; 
+  const productId = req.params.productId;
+
+  // Check if the product with the given ID exists and belongs to the vendor
+  const product = await Product.findOne({ _id: productId, vendor: vendorId });
+
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  // Delete the product images from the server
+  try {
+    // Assuming images are stored in the format image, image1, image2, image3
+    const imagesToDelete = [product.image, product.image1, product.image2, product.image3];
+
+    for (const imageName of imagesToDelete) {
+      if (imageName) {
+        const imagePath = `./uploads/${vendorId}/${imageName}`;
+        try {
+          await fs.unlink(imagePath);
+          console.log(`Image ${imageName} deleted successfully`);
+        } catch (error) {
+          console.error(`Error deleting image ${imageName}:`, error);
+          // Log the error and continue with the next image
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error deleting product images:', error);
+    return res.status(500).json({ error: 'Error deleting product images' });
+  }
+
+  // Delete the product using the deleteOne method
+  await Product.deleteOne({ _id: productId, vendor: vendorId });
+
+  res.json({ message: 'Product deleted successfully' });
+});
+
 router.put('/modify/:productId', verifyToken, async (req, res) => {
   try {
       const vendorId = req.vendorId; // Extracted from JWT
