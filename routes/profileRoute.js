@@ -98,6 +98,7 @@ router.post('/home', authenticateToken, async (req, res) => {
             youtube,
             linkedin,
             brochure,
+            description,
         } = req.body;
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
@@ -118,6 +119,7 @@ router.post('/home', authenticateToken, async (req, res) => {
             existingProfile.youtube = youtube;
             existingProfile.linkedin = linkedin;
             existingProfile.brochure = brochure;
+            existingProfile.description = description;
 
             // Save the updated profile
             const updatedProfile = await existingProfile.save();
@@ -134,6 +136,7 @@ router.post('/home', authenticateToken, async (req, res) => {
                 youtube,
                 linkedin,
                 brochure,
+                description,
 
             });
 
@@ -189,7 +192,9 @@ router.post('/about', authenticateToken, async (req, res) => {
             aboutinto,
             vision,
             mission,
-            value
+            value,
+            description,
+            productdescription,
         } = req.body;
 
         // Check if the vendor exists
@@ -205,7 +210,9 @@ router.post('/about', authenticateToken, async (req, res) => {
                 aboutinto,
                 vision,
                 mission,
-                value
+                value,
+                description,
+                productdescription,
             },
             { new: true } // Return the updated document
         );
@@ -217,7 +224,9 @@ router.post('/about', authenticateToken, async (req, res) => {
                 aboutinto,
                 vision,
                 mission,
-                value
+                value,
+                description,
+                productdescription,
             });
 
             const savedProfileAbout = await newProfileAbout.save();
@@ -231,6 +240,8 @@ router.post('/about', authenticateToken, async (req, res) => {
                 vision: updatedProfileAbout.vision,
                 mission: updatedProfileAbout.mission,
                 value: updatedProfileAbout.value,
+                description: updatedProfileAbout.description,
+                productdescription: updatedProfileAbout.productdescription,
             },
         });
     } catch (error) {
@@ -287,6 +298,7 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
             description4,
             closingTitle,
             closingDescription,
+            description,
         } = req.body;
         // Check if the vendor exists
         const existingVendor = await Vendor.findById(req.vendorId);
@@ -310,6 +322,7 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
                 description4,
                 closingTitle,
                 closingDescription,
+                description,
             },
             { new: true } // Return the updated document
         );
@@ -330,6 +343,7 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
                 description4,
                 closingTitle,
                 closingDescription,
+                description,
             });
 
             const savedProfileWhyus = await newProfileWhyus.save();
@@ -351,6 +365,7 @@ router.post('/whyus', verifyVendorToken, async (req, res) => {
                 description4: updatedProfileWhyus.description4,
                 closingTitle: updatedProfileWhyus.closingTitle,
                 closingDescription: updatedProfileWhyus.closingDescription,
+                description: updatedProfileWhyus.description,
             },
         });
     } catch (error) {

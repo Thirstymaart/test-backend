@@ -3,6 +3,10 @@ const express = require('express');
 const router = express.Router();
 const VendorInfo = require('../models/VendorInfo');
 const Vendor = require('../models/Vendor');
+const ProfileHome = require('../models/ProfileHome');
+const ProfileAbout = require('../models/ProfileAbout');
+const ProfileWhyus = require('../models/ProfileWhyus');
+const Products = require('../models/Products');
 const jwt = require('jsonwebtoken');
 const Fuse = require('fuse.js');
 
@@ -413,6 +417,92 @@ router.get('/get', verifyToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'An error occurred while fetching vendor information' });
+  }
+});
+
+router.get('/seo-data', async (req, res) => {
+  try {
+    const { city, companyName } = req.query;
+    console.log(city, companyName);
+    // Find the vendor in the Vendor collection based on city and company name
+    const cityRegex = new RegExp(city, 'i');
+    const companyNameRegex = new RegExp(companyName, 'i');
+
+    // Find the vendor in the Vendor collection based on city and company name (case-insensitive)
+    const vendor = await Vendor.findOne({ city: cityRegex, companyName: companyNameRegex });
+
+
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+
+    // Get the vendor ID
+    const vendorId = vendor._id;
+
+    // Find the vendor info in the VendorInfo collection using the vendor ID
+    const vendorInfo = await VendorInfo.findOne({ vendorId: vendorId });
+
+    if (!vendorInfo) {
+      return res.status(404).json({ error: 'Vendor info not found' });
+    }
+
+    // Get the category from vendor info
+    const category = vendorInfo.category;
+    // Construct the SEO title using company name, category, and city
+    const homeTitle = `${companyName}, ${category}, ${city}`;
+
+
+    const profileHome = await ProfileHome.findOne({ vendor });
+    if (!profileHome || !profileHome.banner || profileHome.banner.length === 0) {
+      return res.status(404).json({ error: 'Banner not found for the vendor' });
+    }
+    console.log(profileHome);
+    const firstBanner = profileHome.banner[0];
+    const homeDescription = profileHome.description;
+
+
+    const profileAbout = await ProfileAbout.findOne({vendor})
+    if (!profileAbout) {
+      return res.status(404).json({ error: 'about not found for the vendor' });
+    }
+    const aboutDescription = profileAbout.description
+    const productDescription = profileAbout.productdescription
+
+
+
+    const product = await Products.findOne({ vendor });
+    if (!product) {
+      return res.status(404).json({ error: 'product not found for the vendor' });
+    }
+    const productName = product.name
+
+
+    const whyus = await ProfileWhyus.findOne({ vendor });
+    if (!whyus) {
+      return res.status(404).json({ error: 'whyus not found for the vendor' });
+    }
+    const whyUsTitle = whyus.mainHeading
+    const whyusDescription = whyus.description
+
+    // Customize other SEO data as needed
+    const seoData = {
+      title: homeTitle,
+      homeDescription: homeDescription,
+      aboutDescription: aboutDescription,
+      productDescription: productDescription,
+      whyusDescription: whyusDescription,
+      banner: `${vendorId}/${firstBanner}`,
+      productName: productName,
+      whyUsTitle: whyUsTitle,
+      category: category,
+    };
+
+    console.log(seoData, "data ");
+
+    res.json(seoData);
+  } catch (error) {
+    console.error('Error fetching SEO data:', error);
+    res.status(500).json({ error: 'Error fetching SEO data' });
   }
 });
 

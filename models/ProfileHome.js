@@ -25,6 +25,9 @@ const ProfileHome = new Schema({
   instagram: {
     type: String,
   },
+  description: {
+    type: String,
+  },
   youtube: {
     type: String,
   },

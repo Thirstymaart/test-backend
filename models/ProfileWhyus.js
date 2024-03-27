@@ -44,6 +44,9 @@ const ProfileWhyus = new Schema({
   closingDescription: {
     type: String,
   },
+  description: {
+    type: String,
+  },
  
 });
 
