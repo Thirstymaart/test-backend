@@ -161,4 +161,54 @@ router.put('/set-trending/:categoryId', async (req, res) => {
   }
 });
 
+// router.get('/updateSubcategories', async (req, res) => {
+//   try {
+//     // Fetch all categories from the database
+//     const categories = await Category.find();
+
+//     // Process each category and its subcategories
+//     const updatedCategories = categories.map(category => {
+//       const updatedSubCategories = category.subCategories.map(subCategory => {
+//         let updatedName = subCategory.subCategoryName.replace(/&/g, 'and'); // Replace '&' with 'and'
+//         updatedName = updatedName.replace(/[^\w\s]/gi, ''); // Remove special characters
+//         return {
+//           subCategoryName: updatedName,
+//           subCategoryDesc: subCategory.subCategoryDesc,
+//           subCategoryImage: subCategory.subCategoryImage
+//         };
+//       });
+
+//       // Update the subcategories array in the category
+//       return {
+//         _id: category._id,
+//         categoryName: category.categoryName,
+//         categoryDesc: category.categoryDesc,
+//         categoryImage: category.categoryImage,
+//         categoryImageOutline: category.categoryImageOutline,
+//         trendingStatus: category.trendingStatus,
+//         subCategories: updatedSubCategories
+//       };
+//     });
+
+//     // Save the modified categories back to the database
+//     const savedCategories = await Category.bulkWrite(
+//       updatedCategories.map(category => ({
+//         updateOne: {
+//           filter: { _id: category._id },
+//           update: {
+//             $set: {
+//               subCategories: category.subCategories
+//             }
+//           }
+//         }
+//       }))
+//     );
+
+//     res.json({ message: 'Subcategories updated successfully', data: savedCategories });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
+
 module.exports = router;
