@@ -29,7 +29,6 @@ const ProfileAbout = new Schema({
   },
   productdescription: {
     type: String,
-    required: true,
   },
  
 });
