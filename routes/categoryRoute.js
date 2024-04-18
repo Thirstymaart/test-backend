@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Categories');
+const VendorInfo = require('../models/VendorInfo');
 const Fuse = require('fuse.js');
 
 // Add a new category
@@ -161,7 +162,53 @@ router.put('/set-trending/:categoryId', async (req, res) => {
   }
 });
 
-// router.get('/updateSubcategories', async (req, res) => {
+
+// List top categories based on how many vendors have selected them
+router.get('/top/list', async (req, res) => {
+  try {
+    // Get all the vendors in the vendor information collection
+    const vendors = await VendorInfo.find({}, 'category');
+
+    // Flatten the selected categories array and remove duplicates
+    const selectedCategoriesObj = vendors.flatMap(vendor => vendor.category.map(category => ({categoryName: category, count: 1})));
+    const selectedCategories = selectedCategoriesObj.reduce((acc, curr) => {
+      const existingCategory = acc.find(category => category.categoryName === curr.categoryName);
+      if (existingCategory) {
+        existingCategory.count += curr.count;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+
+
+    // Get all the categories from the categories route
+    const categories = await Category.find();
+
+
+
+    // Filter out the categories that are not selected by vendors
+    const filteredCategories = categories.filter(category => selectedCategories.some(selectedCategory => selectedCategory.categoryName === category.categoryName));
+    
+    const randomCategories = [];
+    while (randomCategories.length < 6) {
+      const randomIndex = Math.floor(Math.random() * filteredCategories.length);
+      const randomCategory = filteredCategories[randomIndex];
+      if (!randomCategories.includes(randomCategory)) {
+        randomCategories.push(randomCategory);
+      }
+    }
+    res.json(randomCategories);
+
+  
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// router.get('/name/updateSubcategories', async (req, res) => {
 //   try {
 //     // Fetch all categories from the database
 //     const categories = await Category.find();
@@ -210,5 +257,50 @@ router.put('/set-trending/:categoryId', async (req, res) => {
 //     res.status(500).json({ error: 'Server error' });
 //   }
 // });
+
+// router.get('/name/update', async (req, res) => {
+//   try {
+//     // Fetch all VendorInfo documents from the database
+//     const vendorInfos = await VendorInfo.find();
+
+//     // Process each VendorInfo document
+//     const updatedVendorInfos = vendorInfos.map(info => {
+//       const updatedCategories = info.category.map(categoryItem => {
+//         let updatedName = categoryItem.replace(/&/g, 'and'); // Replace '&' with 'and'
+//         updatedName = updatedName.replace(/[^\w\s]/gi, ''); // Remove special characters
+//         return updatedName;
+//       });
+
+//       // Update the category array in the VendorInfo document
+//       return {
+//         _id: info._id,
+//         vendorId: info.vendorId,
+//         gstNo: info.gstNo,
+//         panNo: info.panNo,
+//         category: updatedCategories,
+//         subCategory: info.subCategory,
+//         companyName: info.companyName,
+//         workingHour: info.workingHour,
+//         address: info.address,
+//         logo: info.logo,
+//         nature: info.nature,
+//         serviceAria: info.serviceAria,
+//         yearofestablishment: info.yearofestablishment,
+//         maplink: info.maplink,
+//       };
+//     });
+
+//     // Save the modified VendorInfo documents back to the database
+//     const savedVendorInfos = await Promise.all(updatedVendorInfos.map(info =>
+//       VendorInfo.findByIdAndUpdate(info._id, info, { new: true })
+//     ));
+
+//     res.json({ message: 'VendorInfo categories updated successfully', data: savedVendorInfos });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
+
 
 module.exports = router;

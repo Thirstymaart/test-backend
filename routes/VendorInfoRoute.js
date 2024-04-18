@@ -157,6 +157,7 @@ router.get('/list/:category', async (req, res) => {
           phone: vendor.phoneNo,
           city: vendor.city,
           username: vendor.username,
+          companyName2: vendor.companyName,
         };
 
         // Push the merged data to the array
