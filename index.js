@@ -2,7 +2,22 @@ const conectToMongo = require("./db");
 const express = require("express");
 const cors = require("cors");
 
+const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
+// const Vendor = require("./models/Vendor");
+// const Product = require("./models/Products");
+// const VendorInfo = require("./models/VendorInfo");
+// const ProfileHome = require("./models/ProfileHome");
+// const ProfileAbout = require("./models/ProfileAbout");
+// const ProfileWhyus = require("./models/ProfileWhyus");
+// const Review = require("./models/Review");
+// const Category = require("./models/Categories");
+// const Keywords = require("./models/Keywords");
+// const Vendorkeywords = require("./models/Vendorkeywords");
+// const Enquiries = require("./models/Enquiries");
+// const User = require("./models/User");
 
 
 conectToMongo();
@@ -10,6 +25,8 @@ const app = express();
 const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
+
+
 
 // app.use(express.static('uploads'))
 

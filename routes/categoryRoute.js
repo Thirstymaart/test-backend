@@ -17,6 +17,40 @@ router.post('/add', async (req, res) => {
   }
 });
 
+router.post('/add-subcategory', async (req, res) => {
+  try {
+    const { categoryName } = req.query;
+    const { subCategoryName, subCategoryDesc, subCategoryImage } = req.body;
+const categoryNameNodash = categoryName.replace(/-/g, ' ');
+
+    console.log("data",categoryNameNodash, subCategoryName, subCategoryDesc, subCategoryImage);
+    
+    // Find the category based on the category name
+    const category = await Category.findOne({ categoryName: { $regex: new RegExp('^' + categoryNameNodash + '$', 'i') } });
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    // Create a new subcategory object
+    const newSubCategory = {
+      subCategoryName,
+      subCategoryDesc,
+      subCategoryImage,
+    };
+
+    // Add the new subcategory to the category's subCategories array
+    category.subCategories.push(newSubCategory);
+    
+    // Save the updated category
+    await category.save();
+    
+    res.json(category);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // List all categories
 router.get('/list', async (req, res) => {
   try {
@@ -208,55 +242,55 @@ router.get('/top/list', async (req, res) => {
 });
 
 
-// router.get('/name/updateSubcategories', async (req, res) => {
-//   try {
-//     // Fetch all categories from the database
-//     const categories = await Category.find();
+router.get('/name/updateSubcategories', async (req, res) => {
+  try {
+    // Fetch all categories from the database
+    const categories = await Category.find();
 
-//     // Process each category and its subcategories
-//     const updatedCategories = categories.map(category => {
-//       const updatedSubCategories = category.subCategories.map(subCategory => {
-//         let updatedName = subCategory.subCategoryName.replace(/&/g, 'and'); // Replace '&' with 'and'
-//         updatedName = updatedName.replace(/[^\w\s]/gi, ''); // Remove special characters
-//         return {
-//           subCategoryName: updatedName,
-//           subCategoryDesc: subCategory.subCategoryDesc,
-//           subCategoryImage: subCategory.subCategoryImage
-//         };
-//       });
+    // Process each category and its subcategories
+    const updatedCategories = categories.map(category => {
+      const updatedSubCategories = category.subCategories.map(subCategory => {
+        let updatedName = subCategory.subCategoryName.replace(/&/g, 'and'); // Replace '&' with 'and'
+        updatedName = updatedName.replace(/[^\w\s]/gi, ''); // Remove special characters
+        return {
+          subCategoryName: updatedName,
+          subCategoryDesc: subCategory.subCategoryDesc,
+          subCategoryImage: subCategory.subCategoryImage
+        };
+      });
 
-//       // Update the subcategories array in the category
-//       return {
-//         _id: category._id,
-//         categoryName: category.categoryName,
-//         categoryDesc: category.categoryDesc,
-//         categoryImage: category.categoryImage,
-//         categoryImageOutline: category.categoryImageOutline,
-//         trendingStatus: category.trendingStatus,
-//         subCategories: updatedSubCategories
-//       };
-//     });
+      // Update the subcategories array in the category
+      return {
+        _id: category._id,
+        categoryName: category.categoryName,
+        categoryDesc: category.categoryDesc,
+        categoryImage: category.categoryImage,
+        categoryImageOutline: category.categoryImageOutline,
+        trendingStatus: category.trendingStatus,
+        subCategories: updatedSubCategories
+      };
+    });
 
-//     // Save the modified categories back to the database
-//     const savedCategories = await Category.bulkWrite(
-//       updatedCategories.map(category => ({
-//         updateOne: {
-//           filter: { _id: category._id },
-//           update: {
-//             $set: {
-//               subCategories: category.subCategories
-//             }
-//           }
-//         }
-//       }))
-//     );
+    // Save the modified categories back to the database
+    const savedCategories = await Category.bulkWrite(
+      updatedCategories.map(category => ({
+        updateOne: {
+          filter: { _id: category._id },
+          update: {
+            $set: {
+              subCategories: category.subCategories
+            }
+          }
+        }
+      }))
+    );
 
-//     res.json({ message: 'Subcategories updated successfully', data: savedCategories });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
+    res.json({ message: 'Subcategories updated successfully', data: savedCategories });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // router.get('/name/update', async (req, res) => {
 //   try {
@@ -301,6 +335,8 @@ router.get('/top/list', async (req, res) => {
 //     res.status(500).json({ error: 'Server error' });
 //   }
 // });
+
+
 
 
 module.exports = router;

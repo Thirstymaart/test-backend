@@ -257,6 +257,90 @@ router.post('/addvendorkeywords', verifyVendorToken, async (req, res) => {
     }
 });
 
+router.get('/getvendorkeywords', verifyVendorToken, async (req, res) => {
+    try {
+        const vendorId = req.vendorId;
+
+        // Find vendor keywords based on vendorId
+        const vendorKeywords = await Vendorkeywords.findOne({ vendor: vendorId });
+
+        if (!vendorKeywords) {
+            return res.status(404).json({ message: 'Vendor keywords not found' });
+        }
+
+        res.status(200).json({ keywords: vendorKeywords.keywords });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.delete('/deletevendorkeyword', verifyVendorToken, async (req, res) => {
+    try {
+        const vendorId = req.vendorId;
+        const { keyword } = req.query;
+
+        // Find vendor keywords based on vendorId
+        const vendorKeywords = await Vendorkeywords.findOne({ vendor: vendorId });
+
+        if (!vendorKeywords) {
+            return res.status(404).json({ message: 'Vendor keywords not found' });
+        }
+
+        // Remove the keyword from the keywords array
+        vendorKeywords.keywords = vendorKeywords.keywords.filter(k => k !== keyword);
+        await vendorKeywords.save();
+
+        res.status(200).json({ message: 'Keyword deleted successfully', keywords: vendorKeywords.keywords });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/list-all', async (req, res) => {
+    try {
+        
+        const result = await Keyword.find();
+        res.status(200).send(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+router.put('/update-categories', async (req, res) => {
+    try {
+        const keywords = await Keyword.find();
+
+        // Update category and subcategory names
+        const updatedKeywords = keywords.map(keyword => {
+            const updatedCategory = keyword.category.replace(/&/g, 'and').replace(/[^\w\s]/g, '');
+            const updatedSubcategory = keyword.subcategory.replace(/&/g, 'and').replace(/[^\w\s]/g, '');
+
+            return {
+                ...keyword.toObject(),
+                category: updatedCategory,
+                subcategory: updatedSubcategory
+            };
+        });
+        await Keyword.collection.bulkWrite(updatedKeywords.map(keyword => ({
+            updateOne: {
+                filter: { _id: keyword._id },
+                update: { $set: keyword }
+            }
+        })));
+
+        
+
+        res.status(200).send({ message: 'Categories updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+
 
 
 module.exports = router;
