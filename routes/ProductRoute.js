@@ -355,34 +355,61 @@ router.delete('/delete/:productId', verifyToken, async (req, res) => {
 
 router.put('/modify/:productId', verifyToken, async (req, res) => {
   try {
-      const vendorId = req.vendorId; // Extracted from JWT
-      const productId = req.params.productId;
-      const updatedProductData = req.body; // Updated product information
+    const vendorId = req.vendorId; // Extracted from JWT
+    const productId = req.params.productId;
+    const { type, subType, category, categorydesc, name, description, price, image, size, minqty, additionalinfo, name1, description1, price1, image1, size1, minqty1, additionalinfo1, name2, description2, price2, image2, size2, minqty2, additionalinfo2, name3, description3, price3, image3, size3, minqty3, additionalinfo3 } = req.body;
 
-      // Check if the product with the given ID exists and belongs to the vendor
-      const product = await Product.findOne({ _id: productId, vendor: vendorId });
+    // Check if the product with the given ID exists and belongs to the vendor
+    const product = await Product.findOne({ _id: productId, vendor: vendorId });
 
-      if (!product) {
-          return res.status(404).json({ error: 'Product not found' });
-      }
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
 
-      // Update the product's information
-      // You can loop through the updatedProductData object to update all fields
-      for (const key in updatedProductData) {
-          if (Object.hasOwnProperty.call(updatedProductData, key)) {
-              product[key] = updatedProductData[key];
-          }
-      }
+    // Update the product's information
+    product.type = type;
+    product.subType = subType;
+    product.category = category;
+    product.categorydesc = categorydesc;
+    product.name = name;
+    product.description = description;
+    product.price = price;
+    product.image = image;
+    product.size = size;
+    product.minqty = minqty;
+    product.additionalinfo = additionalinfo;
+    product.name1 = name1;
+    product.description1 = description1;
+    product.price1 = price1;
+    product.image1 = image1;
+    product.size1 = size1;
+    product.minqty1 = minqty1;
+    product.additionalinfo1 = additionalinfo1;
+    product.name2 = name2;
+    product.description2 = description2;
+    product.price2 = price2;
+    product.image2 = image2;
+    product.size2 = size2;
+    product.minqty2 = minqty2;
+    product.additionalinfo2 = additionalinfo2;
+    product.name3 = name3;
+    product.description3 = description3;
+    product.price3 = price3;
+    product.image3 = image3;
+    product.size3 = size3;
+    product.minqty3 = minqty3;
+    product.additionalinfo3 = additionalinfo3;
 
-      // Save the updated product
-      await product.save();
+    // Save the updated product
+    await product.save();
 
-      res.json({ message: 'Product updated successfully' });
+    res.json({ message: 'Product updated successfully' });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Server error' });
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 
 module.exports = router;
+
