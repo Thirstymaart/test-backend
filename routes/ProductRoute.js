@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken'); // For handling JWTs
 const Product = require('../models/Products');
+const ProductsCategory = require('../models/ProductCategory');
 const Vendorinfo = require('../models/VendorInfo');
 const Vendor = require('../models/Vendor');
-const fs = require('fs').promises; 
+const fs = require('fs').promises;
+const {verifyVendorToken} = require('../middleware/authMiddleware');
 
 const secretKey = 'AbdcshNA846Sjdfg';
 // Middleware to verify JWT and extract vendor ID
@@ -16,7 +18,7 @@ const verifyToken = (req, res, next) => {
   }
   const tokenString = token.split(' ')[1]; // Extract the token without 'Bearer '
   try {
-    const decoded = jwt.verify(tokenString, secretKey); 
+    const decoded = jwt.verify(tokenString, secretKey);
     req.vendorId = decoded.id;
     next();
   } catch (error) {
@@ -76,10 +78,10 @@ router.get('/get/:productName', async (req, res) => {
 
     // Fetch additional vendor information from the vendorinfo collection
     const vendorInfoDetails = await Vendorinfo.find({ vendorId: { $in: vendorIds } });
-    
+
     // Create a map for quick lookup of vendorinfo details
     const vendorInfoDetailsMap = new Map(vendorInfoDetails.map(info => [info.vendorId.toString(), info]));
-    
+
 
     // Transform the products array to include vendor information and additional vendorinfo details
     const transformedProducts = products.map(product => {
@@ -231,91 +233,66 @@ router.get('/category/:category', async (req, res) => {
   }
 });
 
-router.post('/add', verifyToken, async (req, res) => {
-  try {
-    const {type, subType, category, categorydesc, name, description, price, image, size, minqty, additionalinfo, name1, description1, price1, image1, size1, minqty1, additionalinfo1, name2, description2, price2, image2, size2, minqty2, additionalinfo2, name3, description3, price3, image3, size3, minqty3, additionalinfo3, } = req.body;
-
-    const vendorId = req.vendorId; 
-
-    // Create a new product associated with the vendor
-    const product = new Product({
-      vendor: vendorId,
-      type,
-      subType,
-      category,
-      categorydesc,
-      //========================
-      name,
-      description,
-      price,
-      image,
-      size,
-      minqty,
-      additionalinfo,
-      //========================
-      name1,
-      description1,
-      price1,
-      image1,
-      size1,
-      minqty1,
-      additionalinfo1,
-      //========================
-      name2,
-      description2,
-      price2,
-      image2,
-      size2,
-      minqty2,
-      additionalinfo2,
-      //========================
-      name3,
-      description3,
-      price3,
-      image3,
-      size3,
-      minqty3,
-      additionalinfo3,
-      
-    });
-
-    // Save the product to the database
-    const savedProduct = await product.save();
-
-    res.json(savedProduct);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Route to delete a product
-// router.delete('/delete/:productId', verifyToken, async (req, res) => {
+// router.post('/add', verifyToken, async (req, res) => {
 //   try {
-//     const vendorId = req.vendorId; 
-//     const productId = req.params.productId;
+//     const { type, subType, category, categorydesc, name, description, price, image, size, minqty, additionalinfo, name1, description1, price1, image1, size1, minqty1, additionalinfo1, name2, description2, price2, image2, size2, minqty2, additionalinfo2, name3, description3, price3, image3, size3, minqty3, additionalinfo3, } = req.body;
 
-//     // Check if the product with the given ID exists and belongs to the vendor
-//     const product = await Product.findOne({ _id: productId, vendor: vendorId });
+//     const vendorId = req.vendorId;
 
-//     if (!product) {
-//       return res.status(404).json({ error: 'Product not found' });
-//     }
+//     // Create a new product associated with the vendor
+//     const product = new Product({
+//       vendor: vendorId,
+//       type,
+//       subType,
+//       category,
+//       categorydesc,
+//       //========================
+//       name,
+//       description,
+//       price,
+//       image,
+//       size,
+//       minqty,
+//       additionalinfo,
+//       //========================
+//       name1,
+//       description1,
+//       price1,
+//       image1,
+//       size1,
+//       minqty1,
+//       additionalinfo1,
+//       //========================
+//       name2,
+//       description2,
+//       price2,
+//       image2,
+//       size2,
+//       minqty2,
+//       additionalinfo2,
+//       //========================
+//       name3,
+//       description3,
+//       price3,
+//       image3,
+//       size3,
+//       minqty3,
+//       additionalinfo3,
 
-//     // Delete the product using the deleteOne method
-//     await Product.deleteOne({ _id: productId, vendor: vendorId });
+//     });
 
-//     res.json({ message: 'Product deleted successfully' });
+//     // Save the product to the database
+//     const savedProduct = await product.save();
+
+//     res.json(savedProduct);
 //   } catch (error) {
 //     console.error(error);
 //     res.status(500).json({ error: 'Server error' });
 //   }
 // });
 
-// Route to modify a product
-
 router.delete('/delete/:productId', verifyToken, async (req, res) => {
-  const vendorId = req.vendorId; 
+  const vendorId = req.vendorId;
   const productId = req.params.productId;
 
   // Check if the product with the given ID exists and belongs to the vendor
@@ -409,6 +386,278 @@ router.put('/modify/:productId', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+router.post('/setfeatured', verifyToken, async (req, res) => {
+  try {
+    const { name, description, price, image, size, minqty, additionalinfo } = req.body;
+    const vendorId = req.vendorId;
+    console.log(vendorId);
+
+    const featuredProduct = new FeaturedProduct({
+      vendor: vendorId,
+      name,
+      description,
+      price,
+      image,
+      size,
+      minqty,
+      additionalinfo
+    });
+
+    console.log(featuredProduct);
+
+    await featuredProduct.save();
+
+    res.json({ message: 'Featured product added successfully' });
+
+
+
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+
+})
+
+//=======================================================================================
+
+router.post('/add-product', verifyVendorToken, async (req, res) => {
+  const { type, name, description, price, image, size, minqty, additionalinfo } = req.body;
+  const vendorId = req.vendorId;
+
+  try {
+    const product = new Product({
+      vendor: vendorId,
+      type,
+      name,
+      description,
+      price,
+      image,
+      size,
+      minqty,
+      additionalinfo,
+    });
+    await product.save();
+
+    res.status(201).json({ message: 'Product added successfully', product });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/add-category', verifyVendorToken, async (req, res) => {
+  const { categoryName, categoryDesc, maintype, products } = req.body;
+  const vendorId = req.vendorId;
+
+  console.log(categoryName, categoryDesc, products, "/n",maintype, "data");
+
+  try {
+    // Ensure that the number of products being added does not exceed 4
+    if (products.length > 4) {
+      return res.status(400).json({ error: 'You can only add up to 4 products to a category' });
+    }
+
+    // Create an array to store product IDs
+    const productIds = [];
+
+    // Iterate through each product in the request body
+    for (const productData of products) {
+      const { name, description, price, image, size, minqty, additionalinfo } = productData;
+      
+      // Create a new Product instance and save it to the database
+      const product = new Product({
+        vendor: vendorId,
+        type : maintype,
+        isCategory: true,
+        name,
+        description,
+        price,
+        image,
+        size,
+        minqty,
+        additionalinfo,
+      });
+      console.log("products",product);
+      await product.save();
+      // Push the ID of the saved product to the productIds array
+      productIds.push(product._id);
+      // console.log("product id",productIds);
+    }
+
+    // Create a new ProductsCategory instance with the productIds array
+    const category = new ProductsCategory({
+      vendor: vendorId,
+      categoryName,
+      categoryDesc,
+      products: productIds,
+    });
+    console.log("category",category);
+    await category.save();
+
+    res.status(201).json({ message: 'Category added successfully', category });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/modify-product/:productId', verifyVendorToken, async (req, res) => {
+  const { name, description, price, image, size, minqty, additionalinfo } = req.body;
+  const vendorId = req.vendorId;
+  const productId = req.params.productId;
+
+  try {
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, vendor: vendorId }, // Find the product by ID and vendor ID
+      { $set: { name, description, price, image, size, minqty, additionalinfo } }, // Update the product fields
+      { new: true } // Return the updated product
+    );
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found or unauthorized' });
+    }
+
+    res.status(200).json({ message: 'Product modified successfully', product });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/modify-category/:categoryId', verifyVendorToken, async (req, res) => {
+  const { categoryName, categorydesc, products } = req.body;
+  const vendorId = req.vendorId;
+  const categoryId = req.params.categoryId;
+
+  try {
+    // Update the category metadata (name and description)
+    const updatedCategory = await ProductsCategory.findOneAndUpdate(
+      { _id: categoryId, vendor: vendorId },
+      { $set: { categoryName, categorydesc } },
+      { new: true }
+    );
+
+    if (!updatedCategory) {
+      return res.status(404).json({ error: 'Category not found or unauthorized' });
+    }
+
+    // Update each product in the category based on the products array in the request body
+    const updatedProducts = [];
+    for (const productData of products) {
+      const { productId, name, description, price, image, size, minqty, additionalinfo } = productData;
+
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: productId, vendor: vendorId },
+        { $set: { name, description, price, image, size, minqty, additionalinfo } },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        // If a product is not found or unauthorized, skip it and continue updating others
+        continue;
+      }
+
+      updatedProducts.push(updatedProduct);
+    }
+
+    res.status(200).json({ message: 'Category and products modified successfully', category: updatedCategory, products: updatedProducts });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/vendor-categories-products', verifyVendorToken, async (req, res) => {
+  const vendorId = req.vendorId;
+
+  try {
+    // Fetch all categories of the vendor
+    const categories = await ProductsCategory.find({ vendor: vendorId }).populate('products');
+
+    // Fetch all products of the vendor (excluding those in categories)
+    const productsNotInCategories = await Product.find({ vendor: vendorId, _id: { $nin: categories.flatMap(cat => cat.products) } });
+
+    res.status(200).json({ categories,
+       products: productsNotInCategories 
+      });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/vendor-products', verifyVendorToken, async (req, res) => {
+  const vendorId = req.vendorId;
+
+  console.log(vendorId,"id of vendor");
+
+  try {
+    // Fetch all categories of the vendor
+    const categories = await ProductsCategory.find({ vendor: vendorId }).populate('products');
+    console.log(categories);
+    // Fetch all products of the vendor (excluding those in categories)
+    const productsNotInCategories = await Product.find({ vendor: vendorId, _id: { $nin: categories.flatMap(cat => cat.products) } });
+
+    res.status(200).json([
+      ...categories,
+      ...productsNotInCategories
+    ]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/set-featured/:productId', verifyVendorToken, async (req, res) => {
+  const productId = req.params.productId;
+  const vendorId = req.vendorId; // Assuming you have middleware to extract vendor ID
+  console.log(vendorId,"id of vendor");
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Check if the product belongs to the authenticated vendor
+    if (product.vendor.toString() !== vendorId) {
+      return res.status(403).json({ error: 'Unauthorized access' });
+    }
+
+    // Toggle the featured status of the product
+    product.featured = !product.featured;
+    await product.save();
+
+    res.status(200).json({ message: `Product ${product.featured ? 'set as featured' : 'removed from featured'}`, product });
+    console.log(`Product ${product.featured ? 'set as featured' : 'removed from featured'}`);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/delete/:productId', verifyToken, async (req, res) => {
+  const vendorId = req.vendorId;
+  const productId = req.params.productId;
+
+  try {
+    // Check if the product with the given ID exists and belongs to the vendor
+    const product = await Product.findOne({ _id: productId, vendor: vendorId });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Delete the product image from the server
+    const imagePath = path.join(__dirname, '..', 'uploads', vendorId, product.image);
+    await fs.unlink(imagePath);
+
+    // Delete the product using the deleteOne method
+    await Product.deleteOne({ _id: productId, vendor: vendorId });
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return res.status(500).json({ error: 'Error deleting product' });
+  }
+});
+
+
 
 
 module.exports = router;

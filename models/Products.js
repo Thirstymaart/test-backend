@@ -11,17 +11,13 @@ const ProductSchema = new Schema({
     type: String,
     required: true,
   },
-  subType: {
-    type: String,
-    required: true,
+  isCategory: {
+    type: Boolean,
+    default: false,
   },
-  category: {
-    type: String,
-  },
-  categorydesc: {
+  categoryId: {
     type: String,
   },
-  //--------------------------------------------------------------------
   name: {
     type: String,
     required: true,
@@ -47,72 +43,22 @@ const ProductSchema = new Schema({
   additionalinfo: {
     type: String,
   },
-  //--------------------------------------------------------------------
-  name1: {
-    type: String,
+  featured: {
+    type: Boolean,
+    default: false,
   },
-  description1: {
-    type: String,
-  },
-  price1: {
-    type: String,
-  },
-  image1: {
-    type: String,
-  },
-  size1: {
-    type: String,
-  },
-  minqty1: {
-    type: String,
-  },
-  additionalinfo1: {
-    type: String,
-  },
-  //--------------------------------------------------------------------
-  name2: {
-    type: String,
-  },
-  description2: {
-    type: String,
-  },
-  price2: {
-    type: String,
-  },
-  image2: {
-    type: String,
-  },
-  size2: {
-    type: String,
-  },
-  minqty2: {
-    type: String,
-  },
-  additionalinfo2: {
-    type: String,
-  },
-  //--------------------------------------------------------------------
-  name3: {
-    type: String,
-  },
-  description3: {
-    type: String,
-  },
-  price3: {
-    type: String,
-  },
-  image3: {
-    type: String,
-  },
-  size3: {
-    type: String,
-  },
-  minqty3: {
-    type: String,
-  },
-  additionalinfo3: {
-    type: String,
-  },
+});
+
+ProductSchema.pre('save', async function () {
+  if (this.isModified('featured') && this.featured) {
+    const featuredProductsCount = await this.model('Product').countDocuments({
+      vendor: this.vendor,
+      featured: true,
+    });
+    if (featuredProductsCount >= 4) {
+      throw new Error('Maximum number of featured products per vendor reached');
+    }
+  }
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

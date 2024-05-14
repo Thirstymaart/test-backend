@@ -70,12 +70,13 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { identifier, password } = req.body;
+    console.log("data",identifier);
 
     // Attempt to find a match in the User collection by email or username
     const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
     });
-
+console.log(user,"user");
     if (user) {
       // User found, check the password
       if (await bcrypt.compare(password, user.password)) {
