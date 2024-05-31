@@ -55,6 +55,7 @@ const categoryNameNodash = categoryName.replace(/-/g, ' ');
 router.get('/list', async (req, res) => {
   try {
     const categories = await Category.find();
+    console.log(categories ,"categories");
     res.json(categories);
   } catch (error) {
     console.error(error);

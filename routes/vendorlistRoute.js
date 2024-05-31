@@ -1,22 +1,88 @@
 const express = require('express');
 const router = express.Router();
+const ProfileHome = require('../models/ProfileHome');
+const ProfileAbout = require('../models/ProfileAbout');
+const ProfileWhyus = require('../models/ProfileWhyus');
 const Vendor = require('../models/Vendor');
 const VendorInfo = require('../models/VendorInfo');
+const Product = require('../models/Products');
 const { verifyVendorToken, verifyAdminToken } = require('../middleware/authMiddleware');
 const moment = require('moment');
 
 
+// router.get('/list', verifyVendorToken, async (req, res) => {
+//     try {
+//         // Specify the fields you want to retrieve
+//         const vendors = await Vendor.find({}, 'name email phoneNo username validtill');
+//         res.json(vendors);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
+
 router.get('/list', verifyVendorToken, async (req, res) => {
     try {
-        // Specify the fields you want to retrieve
+        // Fetch the list of vendors
         const vendors = await Vendor.find({}, 'name email phoneNo username validtill');
 
-        res.json(vendors);
+        // Define criteria and weights for profile completion
+        const criteriaWeights = {
+            companyInfo: 0.2,
+            profileDetails: 0.6,
+            products: 0.2,
+        };
+
+        // Helper function to calculate profile completion for a given vendor
+        const calculateProfileCompletion = async (vendorId) => {
+            let profileCompletion = 0;
+
+            // Calculate company info completeness from VendorInfo collection
+            const vendorInfo = await VendorInfo.findOne({ vendorId: vendorId });
+            if (vendorInfo && vendorInfo.companyName && vendorInfo.address) {
+                profileCompletion += criteriaWeights.companyInfo;
+            }
+
+            // Calculate profile details completeness from ProfileHome, ProfileAbout, and ProfileWhyUs collections
+            const profileHome = await ProfileHome.findOne({ vendor: vendorId });
+            const profileAbout = await ProfileAbout.findOne({ vendor: vendorId });
+            const profileWhyUs = await ProfileWhyus.findOne({ vendor: vendorId });
+
+            if (profileHome && profileHome.homeintro && profileAbout && profileAbout.aboutinto && profileWhyUs && profileWhyUs.mainHeading) {
+                profileCompletion += criteriaWeights.profileDetails;
+            }
+
+            // Calculate products completeness from Product collection (example: at least 3 products uploaded)
+            const productsCount = await Product.countDocuments({ vendor: vendorId });
+            if (productsCount >= 3) {
+                profileCompletion += criteriaWeights.products;
+            }
+
+            // Calculate overall profile completion percentage
+            return (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileDetails + criteriaWeights.products)) * 100;
+        };
+
+        // Calculate profile completion for each vendor
+        const vendorsWithProfileCompletion = await Promise.all(vendors.map(async (vendor) => {
+            const profileCompletion = await calculateProfileCompletion(vendor._id);
+            return {
+                ...vendor._doc, // Include existing vendor data
+                profileCompletion, // Add profile completion percentage
+            };
+        }));
+
+        // Sort vendors by profile completion percentage in descending order
+        vendorsWithProfileCompletion.sort((a, b) => b.profileCompletion - a.profileCompletion);
+
+        // Respond with the sorted vendors including their profile completion percentage
+        res.json(vendorsWithProfileCompletion);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+
 
 router.get('/invoice', verifyVendorToken, async (req, res) => {
     try {

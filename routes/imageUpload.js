@@ -4,6 +4,10 @@ const router = express.Router();
 const multer = require('multer');
 const fs = require('fs/promises');
 const jwt = require('jsonwebtoken');
+const { verifyVendorToken } = require('../middleware/authMiddleware');
+const Vendor = require('../models/Vendor');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 // Multer storage configuration
 const storage = multer.memoryStorage();
@@ -21,25 +25,64 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
-    const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
-    const folderPath = `./uploads/${vendorId}`;
+// router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
+//     const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
+//     const folderPath = `./uploads/${vendorId}`;
 
-    try {
-      await fs.mkdir(folderPath, { recursive: true });
+//     try {
+//       await fs.mkdir(folderPath, { recursive: true });
 
-      const imageName = req.file.originalname;
-      const imagePath = `${folderPath}/${imageName}`;
-      await fs.writeFile(imagePath, req.file.buffer);
+//       const imageName = req.file.originalname;
+//       const imagePath = `${folderPath}/${imageName}`;
+//       await fs.writeFile(imagePath, req.file.buffer);
 
-      // Construct the full URL including the server domain and path
-      const fullUrl = `${imageName}`;
+//       // Construct the full URL including the server domain and path
+//       const fullUrl = `${imageName}`;
   
-      res.json({ imageUrl: fullUrl });
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
+//       res.json({ imageUrl: fullUrl });
+//     } catch (error) {
+//       console.error('Error uploading image:', error);
+//       res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// });
+
+router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
+  const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
+  console.log("Image Upload ",vendorId);
+  try {
+    // Fetch the vendor's details
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor not found' });
     }
+
+    // Get city and company name, and format them
+    const city = vendor.city.replace(/\s+/g, '-');
+    const companyName = vendor.companyName.replace(/\s+/g, '-');
+    const originalImageName = req.file.originalname.replace(/\s+/g, '-');
+
+    // Generate a unique identifier
+    const uniqueId = uuidv4();
+
+    // Construct the new image name
+    const imageName = `${city}-${companyName}-${uniqueId}-${originalImageName}`;
+
+    // Create the vendor's upload directory if it doesn't exist
+    const folderPath = path.join(__dirname, '..', 'uploads', vendorId.toString());
+    await fs.mkdir(folderPath, { recursive: true });
+
+    // Save the image
+    const imagePath = path.join(folderPath, imageName);
+    await fs.writeFile(imagePath, req.file.buffer);
+
+    // Construct the full URL including the server domain and path (adjust as necessary)
+    const fullUrl = `${imageName}`;
+
+    res.json({ imageUrl: fullUrl });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
 
 router.delete('/delete/:imageName', verifyToken, async (req, res) => {

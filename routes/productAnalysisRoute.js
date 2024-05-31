@@ -249,6 +249,23 @@ router.get('/profile-clicks', verifyVendorToken, async (req, res) => {
   }
 });
 
+router.get('/total-profile-clicks', verifyVendorToken, async (req, res) => {
+  try {
+    const vendorId = req.vendorId;
+
+    // Find all profile clicks for the given vendor
+    const clicks = await ButtonClick.find({ vendor: vendorId }).select('profileClick').exec();
+
+    // Sum all profile clicks
+    const totalProfileClicks = clicks.reduce((acc, click) => acc + click.profileClick, 0);
+
+    res.json({ totalProfileClicks });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 function getDayOfWeek(dayIndex) {
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return daysOfWeek[dayIndex];

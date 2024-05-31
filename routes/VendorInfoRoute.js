@@ -259,6 +259,7 @@ router.post('/add', verifyToken, async (req, res) => {
         serviceAria,
         yearofestablishment,
         maplink,
+        businessType
       } = req.body;
 
       const updatedFields = {
@@ -274,6 +275,7 @@ router.post('/add', verifyToken, async (req, res) => {
         serviceAria,
         yearofestablishment,
         maplink,
+        businessType
       };
 
       // Use $set to update the specified fields without affecting the others
@@ -295,6 +297,7 @@ router.post('/add', verifyToken, async (req, res) => {
         serviceAria,
         yearofestablishment,
         maplink,
+        businessType
       } = req.body;
 
       const vendorInfo = new VendorInfo({
@@ -311,6 +314,7 @@ router.post('/add', verifyToken, async (req, res) => {
         serviceAria,
         yearofestablishment,
         maplink,
+        businessType
       });
 
       await vendorInfo.save();
@@ -403,6 +407,7 @@ router.get('/get', verifyToken, async (req, res) => {
       serviceAria: vendorInfo.serviceAria,
       yearofestablishment: vendorInfo.yearofestablishment,
       maplink: vendorInfo.maplink,
+      businessType: vendorInfo.businessType,
 
 
       // Add fields from Vendor

@@ -54,6 +54,11 @@ const vendorInfoSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    businessType: {
+        type: String,
+        enum: ['product', 'service', 'trader', 'hotels', 'restaurant'],
+        required: true,
+    },
 });
 
 const VendorInfo = mongoose.model('VendorInfo', vendorInfoSchema);

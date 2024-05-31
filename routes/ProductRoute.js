@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken'); // For handling JWTs
 const Product = require('../models/Products');
+const Restaurant = require('../models/Restaurant');
 const ProductsCategory = require('../models/ProductCategory');
 const Vendorinfo = require('../models/VendorInfo');
 const Vendor = require('../models/Vendor');
 const fs = require('fs').promises;
-const {verifyVendorToken} = require('../middleware/authMiddleware');
+const { verifyVendorToken } = require('../middleware/authMiddleware');
+const path = require('path');
 
 const secretKey = 'AbdcshNA846Sjdfg';
 // Middleware to verify JWT and extract vendor ID
@@ -450,7 +452,7 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
   const { categoryName, categoryDesc, maintype, products } = req.body;
   const vendorId = req.vendorId;
 
-  console.log(categoryName, categoryDesc, products, "/n",maintype, "data");
+  console.log(categoryName, categoryDesc, products, "/n", maintype, "data");
 
   try {
     // Ensure that the number of products being added does not exceed 4
@@ -464,11 +466,11 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
     // Iterate through each product in the request body
     for (const productData of products) {
       const { name, description, price, image, size, minqty, additionalinfo } = productData;
-      
+
       // Create a new Product instance and save it to the database
       const product = new Product({
         vendor: vendorId,
-        type : maintype,
+        type: maintype,
         isCategory: true,
         name,
         description,
@@ -478,7 +480,7 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
         minqty,
         additionalinfo,
       });
-      console.log("products",product);
+      console.log("products", product);
       await product.save();
       // Push the ID of the saved product to the productIds array
       productIds.push(product._id);
@@ -492,7 +494,7 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
       categoryDesc,
       products: productIds,
     });
-    console.log("category",category);
+    console.log("category", category);
     await category.save();
 
     res.status(201).json({ message: 'Category added successfully', category });
@@ -575,9 +577,10 @@ router.get('/vendor-categories-products', verifyVendorToken, async (req, res) =>
     // Fetch all products of the vendor (excluding those in categories)
     const productsNotInCategories = await Product.find({ vendor: vendorId, _id: { $nin: categories.flatMap(cat => cat.products) } });
 
-    res.status(200).json({ categories,
-       products: productsNotInCategories 
-      });
+    res.status(200).json({
+      categories,
+      products: productsNotInCategories
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -586,7 +589,7 @@ router.get('/vendor-categories-products', verifyVendorToken, async (req, res) =>
 router.get('/vendor-products', verifyVendorToken, async (req, res) => {
   const vendorId = req.vendorId;
 
-  console.log(vendorId,"id of vendor");
+  console.log(vendorId, "id of vendor");
 
   try {
     // Fetch all categories of the vendor
@@ -607,7 +610,7 @@ router.get('/vendor-products', verifyVendorToken, async (req, res) => {
 router.put('/set-featured/:productId', verifyVendorToken, async (req, res) => {
   const productId = req.params.productId;
   const vendorId = req.vendorId; // Assuming you have middleware to extract vendor ID
-  console.log(vendorId,"id of vendor");
+  console.log(vendorId, "id of vendor");
 
   try {
     const product = await Product.findById(productId);
@@ -631,34 +634,165 @@ router.put('/set-featured/:productId', verifyVendorToken, async (req, res) => {
   }
 });
 
-router.delete('/delete/:productId', verifyToken, async (req, res) => {
+router.get('/featured-products/', verifyVendorToken, async (req, res) => {
   const vendorId = req.vendorId;
-  const productId = req.params.productId;
 
   try {
-    // Check if the product with the given ID exists and belongs to the vendor
-    const product = await Product.findOne({ _id: productId, vendor: vendorId });
+    // Retrieve all featured products for the vendor
+    const featuredProducts = await Product.find({ vendor: vendorId, featured: true });
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
+    let additionalProductsNeeded = 4 - featuredProducts.length;
+
+    if (additionalProductsNeeded > 0) {
+      // Fetch all products of the vendor except the already selected featured ones
+      const excludedProductIds = featuredProducts.map(product => product._id);
+      const allProducts = await Product.find({ vendor: vendorId, _id: { $nin: excludedProductIds } });
+
+      // Shuffle and select the required number of random products
+      const randomProducts = allProducts.sort(() => 0.5 - Math.random()).slice(0, additionalProductsNeeded);
+
+      // Combine featured and random products
+      const combinedProducts = [...featuredProducts, ...randomProducts];
+
+      return res.status(200).json({ products: combinedProducts });
     }
 
-    // Delete the product image from the server
-    const imagePath = path.join(__dirname, '..', 'uploads', vendorId, product.image);
-    await fs.unlink(imagePath);
+    res.status(200).json({ products: featuredProducts.slice(0, 4) }); // In case there are 4 or more featured products
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    // Delete the product using the deleteOne method
-    await Product.deleteOne({ _id: productId, vendor: vendorId });
+router.delete('/delete-category/:categoryId', verifyToken, async (req, res) => {
+  const vendorId = req.vendorId;
+  const categoryId = req.params.categoryId;
+  const isCategory = req.query.isCategory;
 
-    res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    return res.status(500).json({ error: 'Error deleting product' });
+  console.log(isCategory, "isCategory");
+
+  if (isCategory === 'false') {
+    console.log("delete product");
+    try {
+      // Check if the product with the given ID exists and belongs to the vendor
+      const product = await Product.findOne({ _id: categoryId, vendor: vendorId });
+
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Delete the product image from the server
+      const imagePath = path.join(__dirname, '..', 'uploads', vendorId, product.image);
+      try {
+        await fs.unlink(imagePath);
+      } catch (imageError) {
+        console.error(`Error deleting product image: ${imageError.message}`);
+        // Continue even if the image deletion fails
+      }
+
+      // Delete the product using the deleteOne method
+      await Product.deleteOne({ _id: categoryId, vendor: vendorId });
+
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return res.status(500).json({ error: 'Error deleting product' });
+    }
+  } else {
+    console.log("delete category");
+    try {
+      // Check if the category with the given ID exists and belongs to the vendor
+      const category = await ProductsCategory.findOne({ _id: categoryId, vendor: vendorId });
+
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+
+      // Delete all products associated with the category and their images
+      for (const productId of category.products) {
+        const product = await Product.findOne({ _id: productId });
+        if (product) {
+          const imagePath = path.join(__dirname, '..', 'uploads', vendorId, product.image);
+          try {
+            await fs.unlink(imagePath);
+          } catch (imageError) {
+            console.error(`Error deleting product image: ${imageError.message}`);
+            // Continue even if the image deletion fails
+          }
+        }
+      }
+      await Product.deleteMany({ _id: { $in: category.products } });
+
+      // Delete the category using the deleteOne method
+      await ProductsCategory.deleteOne({ _id: categoryId, vendor: vendorId });
+
+      res.json({ message: 'Category and associated products deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      return res.status(500).json({ error: 'Error deleting category' });
+    }
+  }
+});
+
+// restaurant routes ====================================================================================
+
+router.post('/add-restaurant', verifyVendorToken, async (req, res) => {
+  const {
+    foodType,
+    parking,
+    cuisine,
+    deliverySystem,
+    bar,
+    amenities,
+    roomFeatures,
+    diningOptions,
+    accessibility,
+    additionalServices,
+  } = req.body;
+  const vendorId = req.vendorId;
+
+
+  try {
+    const restaurant = await Restaurant.findOneAndUpdate(
+      { vendor: vendorId },
+      {
+        vendor: vendorId,
+        foodType,
+        parking,
+        cuisine,
+        deliverySystem,
+        bar,
+        amenities,
+        roomFeatures,
+        diningOptions,
+        accessibility,
+        additionalServices,
+      },
+      { new: true, upsert: true, runValidators: true } // Options: new: return the modified document, upsert: create if not exists, runValidators: validate before update
+    );
+
+    res.status(201).json({ message: 'Restaurant information saved successfully', restaurant });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 
 
+router.get('/get-restaurant', verifyVendorToken, async (req, res) => {
+  const vendorId = req.vendorId;
+
+  try {
+    const restaurant = await Restaurant.findOne({ vendor: vendorId });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant information not found' });
+    }
+
+    res.status(200).json({ restaurant });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
 
