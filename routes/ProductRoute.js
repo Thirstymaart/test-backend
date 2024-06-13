@@ -754,8 +754,7 @@ router.post('/add-restaurant', verifyVendorToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOneAndUpdate(
       { vendor: vendorId },
-      {
-        vendor: vendorId,
+      { vendor: vendorId,
         foodType,
         parking,
         cuisine,
@@ -789,6 +788,37 @@ router.get('/get-restaurant', verifyVendorToken, async (req, res) => {
     }
 
     res.status(200).json({ restaurant });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/get-sorted-restaurant', verifyVendorToken, async (req, res) => {
+  const vendorId = req.vendorId;
+
+  try {
+    const restaurant = await Restaurant.findOne({ vendor: vendorId });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant information not found' });
+    }
+
+    const formattedData = [
+      { title: 'Parking', data: restaurant.parking },
+      { title: 'Cuisine', data: restaurant.cuisine },
+      { title: 'Delivery System', data: restaurant.deliverySystem },
+      { title: 'Bar', data: restaurant.bar },
+      { title: 'Amenities', data: restaurant.amenities },
+      { title: 'Room Features', data: restaurant.roomFeatures },
+      { title: 'Dining Options', data: restaurant.diningOptions },
+      { title: 'Accessibility', data: restaurant.accessibility },
+      { title: 'Additional Services', data: restaurant.additionalServices }
+    ];
+
+    // Filter out objects where the data array is empty
+    const filteredData = formattedData.filter(item => item.data.length > 0);
+
+    res.status(200).json({ restaurant: filteredData });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

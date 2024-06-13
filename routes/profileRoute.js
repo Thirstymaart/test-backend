@@ -420,7 +420,9 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
         // Example: Define criteria and weights for profile completion
         const criteriaWeights = {
             companyInfo: 0.2, // Weight for company info completeness
-            profileDetails: 0.6, // Weight for profile details completeness
+            profileHomeDetails: 0.2, // Weight for profile details completeness
+            profileAboutDetails: 0.2, // Weight for profile details completeness
+            profileWhyUsDetails: 0.2, // Weight for profile details completeness
             products: 0.2, // Weight for products completeness
         };
 
@@ -438,8 +440,16 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
         const profileAbout = await ProfileAbout.findOne({ vendor: vendorId });
         const profileWhyUs = await ProfileWhyus.findOne({ vendor: vendorId });
         
-        if (profileHome && profileHome.homeintro && profileAbout && profileAbout.aboutinto && profileWhyUs && profileWhyUs.mainHeading) {
-            profileCompletion += criteriaWeights.profileDetails;
+        if (profileHome && profileHome.homeintro ) {
+            profileCompletion += criteriaWeights.profileHomeDetails;
+        }
+
+        if ( profileAbout && profileAbout.aboutinto ) {
+            profileCompletion += criteriaWeights.profileAboutDetails;
+        }
+
+        if ( profileWhyUs && profileWhyUs.mainHeading) {
+            profileCompletion += criteriaWeights.profileWhyUsDetails;
         }
 
         // Calculate products completeness from Product collection (example: at least 3 products uploaded)
@@ -449,7 +459,7 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
         }
 
         // Calculate overall profile completion percentage
-        const overallProgress = (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileDetails + criteriaWeights.products)) * 100;
+        const overallProgress = (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products)) * 100;
 
         res.json({ profileCompletion: overallProgress });
     } catch (error) {
