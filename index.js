@@ -40,6 +40,7 @@ app.use('/api/vendors', require('./routes/vendorlistRoute'));
 app.use('/api/newsletter', require('./routes/newsLatterRoute'));
 app.use('/api/email', require('./routes/emailRoute'));
 app.use('/api/restaurant', require('./routes/restaurantRoute'));
+app.use('/api/landingform', require('./routes/landingFormRoute'));
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

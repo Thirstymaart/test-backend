@@ -86,6 +86,7 @@ router.get('/get-menu-images', verifyVendorToken, async (req, res) => {
         res.status(200).json({ images: menuImages.images,
             vendorId: req.vendorId
          });
+         
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
