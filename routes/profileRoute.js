@@ -443,23 +443,36 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
         if (profileHome && profileHome.homeintro ) {
             profileCompletion += criteriaWeights.profileHomeDetails;
         }
+        console.log(profileCompletion ,"home");
 
         if ( profileAbout && profileAbout.aboutinto ) {
             profileCompletion += criteriaWeights.profileAboutDetails;
         }
 
+        console.log(profileCompletion ,"about");
+
         if ( profileWhyUs && profileWhyUs.mainHeading) {
             profileCompletion += criteriaWeights.profileWhyUsDetails;
         }
+
+        console.log(profileCompletion ,"whyus");
 
         // Calculate products completeness from Product collection (example: at least 3 products uploaded)
         const productsCount = await Product.countDocuments({ vendor: vendorId });
         if (productsCount >= 3) {
             profileCompletion += criteriaWeights.products;
-        }
 
+
+        }
+        
+        console.log(profileCompletion ,"products");
+        
         // Calculate overall profile completion percentage
         const overallProgress = (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products)) * 100;
+
+        console.log(profileCompletion ,"profileCompletion");
+        console.log(criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products ,"criteriaWeights");
+
 
         res.json({ profileCompletion: overallProgress });
     } catch (error) {

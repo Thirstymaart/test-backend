@@ -44,7 +44,8 @@ router.get('/get', verifyVendorToken, async (req, res) => {
     const reviews = await Review.find({ vendorId }).select('rating comment createdAt userId');
 
     const totalRatings = reviews.length;
-    const averageRating = totalRatings > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings : 0;
+    const averageRating1 = totalRatings > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings : 0;
+    const averageRating = averageRating1.toFixed(1);
 
     const ratingCounts = {
       'one': reviews.filter((review) => review.rating === 1).length,
@@ -64,9 +65,12 @@ router.get('/get', verifyVendorToken, async (req, res) => {
         const user = await User.findById(review.userId).select('name');
         if (user) {
           userOrVendorName = user.name;
-        }else{
+        } else {
           const vendor = await Vendor.findById(review.userId).select('name');
-          userOrVendorName = vendor.name;
+          console.log(vendor);
+          if (vendor) {
+            userOrVendorName = vendor.name;
+          }
         }
       }
 
@@ -89,7 +93,7 @@ router.get('/get', verifyVendorToken, async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching ratings' });
   }
 });
-
+  
 
 
 
