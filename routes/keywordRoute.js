@@ -300,7 +300,7 @@ router.delete('/deletevendorkeyword', verifyVendorToken, async (req, res) => {
 
 router.get('/list-all', async (req, res) => {
     try {
-        
+
         const result = await Keyword.find();
         res.status(200).send(result);
     } catch (error) {
@@ -331,9 +331,23 @@ router.put('/update-categories', async (req, res) => {
             }
         })));
 
-        
+
 
         res.status(200).send({ message: 'Categories updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/total-keywords-count', async (req, res) => {
+    try {
+        const result = await Keyword.aggregate([
+            { $unwind: "$keywords" },
+            { $group: { _id: null, totalKeywords: { $sum: 1 } } }
+        ]);
+        const totalKeywords = result.length > 0 ? result[0].totalKeywords : 0;
+        res.status(200).send({ totalKeywords });
     } catch (error) {
         console.error(error);
         res.status(500).send({ error: 'Internal Server Error' });

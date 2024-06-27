@@ -105,6 +105,76 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// router.get('/list/:category', async (req, res) => {
+//   try {
+//     const category = req.params.category;
+
+//     const allVendors = await VendorInfo.find();
+
+//     // Initialize Fuse.js with the vendors data and fuzzy search options
+//     const fuse = new Fuse(allVendors, {
+//       keys: ['category'], // Specify the keys to search within (category in this case)
+//       includeScore: true, // Include search score for ranking results
+//       threshold: 0.3, // Adjust the threshold for fuzzy matching (lower values allow more flexibility)
+//     });
+
+//     // Perform the fuzzy search on the category name
+//     const searchResults = fuse.search(category);
+
+//     // Extract the matched items from the search results
+//     const matchedVendors = searchResults.map(result => result.item);
+
+//     // Create an array to store the merged data for vendors with the specified subcategory
+//     const vendorsDataWithSubcategory = [];
+
+//     // Loop through each vendor with the specified subcategory
+//     for (const vendorInfo of matchedVendors) {
+//       // console.log(vendorInfo.businessType);
+//       // Query Vendor collection using vendorId
+//       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+
+//       if (vendor) {
+//         // Merge data from VendorInfo and Vendor collections
+//         const mergedData = {
+//           vendorId: vendorInfo.vendorId,
+//           // Add other fields from VendorInfo
+//           gstNo: vendorInfo.gstNo,
+//           panNo: vendorInfo.panNo,
+//           category: vendorInfo.category,
+//           subCategory: vendorInfo.subCategory,
+//           companyName: vendorInfo.companyName,
+//           workingHour: vendorInfo.workingHour,
+//           address: vendorInfo.address,
+//           logo: vendorInfo.logo,
+//           nature: vendorInfo.nature,
+//           serviceAria: vendorInfo.serviceAria,
+//           yearofestablishment: vendorInfo.yearofestablishment,
+//           maplink: vendorInfo.maplink,
+//           businesstype: vendorInfo.businessType,
+
+//           // Add fields from Vendor
+//           name: vendor.name,
+//           email: vendor.email,
+//           // Include phone number from Vendor collection
+//           phone: vendor.phoneNo,
+//           city: vendor.city,
+//           username: vendor.username,
+//           companyName2: vendor.companyName,
+//         };
+
+//         // Push the merged data to the array
+//         vendorsDataWithSubcategory.push(mergedData);
+//       }
+//     }
+
+//     // Return the list of vendors with the specified subcategory in the response
+//     res.status(200).json(vendorsDataWithSubcategory);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'An error occurred while fetching vendors by subcategory' });
+//   }
+// });
+
 router.get('/list/:category', async (req, res) => {
   try {
     const category = req.params.category;
@@ -133,6 +203,24 @@ router.get('/list/:category', async (req, res) => {
       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
 
       if (vendor) {
+        // Determine urlpart based on businessType
+        let urlpart;
+        switch (vendorInfo.businessType) {
+          case 'product':
+          case 'service':
+          case 'trader':
+            urlpart = 'profile';
+            break;
+          case 'restaurant':
+            urlpart = 'restaurant';
+            break;
+          case 'hotels':
+            urlpart = 'hotel';
+            break;
+          default:
+            urlpart = 'profile'; // Default to 'profile' if businessType is not recognized
+        }
+
         // Merge data from VendorInfo and Vendor collections
         const mergedData = {
           vendorId: vendorInfo.vendorId,
@@ -149,6 +237,8 @@ router.get('/list/:category', async (req, res) => {
           serviceAria: vendorInfo.serviceAria,
           yearofestablishment: vendorInfo.yearofestablishment,
           maplink: vendorInfo.maplink,
+          businesstype: vendorInfo.businessType,
+          urlpart: urlpart, // Add urlpart to the response
 
           // Add fields from Vendor
           name: vendor.name,
