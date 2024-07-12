@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 router.use(bodyParser.json());
 
-let transactionCounter = 1030;
+let transactionCounter = 1032;
 
 function generateTransactionId() {
   const fixedPart = 'MAART';
@@ -35,19 +35,19 @@ const keyIndex = '1';
 router.post('/initiatepayment', async (req, res) => {
   const requestBody = req.body;
   try {
-    console.log(requestBody);
+  console.log(requestBody);
     let vendor = await Vendor.findOne({ username: requestBody.username, });
 
     if (vendor) {
       const transactionId = generateTransactionId();
-      console.log(transactionId);
+    console.log(transactionId);
       vendor.paymentid = transactionId;
       await vendor.save();
 
       const orderDetails = {
         merchantId: 'M22A5YJ135FZ1',
         merchantTransactionId: transactionId,
-        amount: 100,
+        amount: 943900,
         merchantUserId: requestBody.username,
         redirectUrl: 'https://thirstymaart.com/invoice',
         redirectMode: 'REDIRECT',
@@ -56,6 +56,7 @@ router.post('/initiatepayment', async (req, res) => {
           type: 'PAY_PAGE',
         },
       };
+      // 
       // Convert order details to Base64
       const base64Payload = Buffer.from(JSON.stringify(orderDetails)).toString('base64');
 
@@ -79,7 +80,7 @@ router.post('/initiatepayment', async (req, res) => {
 
       // Parse the response
       const responseData = await response.json();
-      console.log(responseData);
+    console.log(responseData);
 
       res.json(responseData);
 
@@ -105,7 +106,7 @@ router.post('/callback', async (req, res) => {
     // Parse the decoded response
     const parsedResponse = JSON.parse(decodedResponse);
 
-    console.log(parsedResponse);
+  console.log(parsedResponse);
 
     // Find the vendor using the merchantTransactionId from the parsed response
     const vendor = await Vendor.findOne({ paymentid: parsedResponse.data.merchantTransactionId });
@@ -113,7 +114,7 @@ router.post('/callback', async (req, res) => {
     
     // Update vendor details after a successful transaction
     if (vendor && parsedResponse.success) {
-      console.log("befor",vendor);
+    console.log("befor",vendor);
       // Update status, payment, and validtill fields
       vendor.status = parsedResponse.status;
       vendor.payment = true;
@@ -124,7 +125,7 @@ router.post('/callback', async (req, res) => {
       vendor.paymentDate = currentDate;
       // Save the updated vendor details
       await vendor.save();
-      console.log("after",vendor);
+    console.log("after",vendor);
 
     } else if (!vendor) {
       console.error('Vendor not found for the given merchantTransactionId:', parsedResponse.data.merchantTransactionId);

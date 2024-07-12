@@ -12,7 +12,7 @@ router.post('/add', verifyUserToken, async (req, res) => {
   try {
     const { vendorToken, rating, comment } = req.body;
 
-    console.log(req.body);
+  console.log(req.body);
 
     // Decode the JWT token to get the vendor's ID
     const decodedToken = jwt.verify(vendorToken, 'AbdcshNA846Sjdfg'); 
@@ -61,13 +61,13 @@ router.get('/get', verifyVendorToken, async (req, res) => {
       let userOrVendorName = 'Unknown';
 
       if (review.userId) {
-        console.log(review.userId);
+      console.log(review.userId);
         const user = await User.findById(review.userId).select('name');
         if (user) {
           userOrVendorName = user.name;
         } else {
           const vendor = await Vendor.findById(review.userId).select('name');
-          console.log(vendor);
+        console.log(vendor);
           if (vendor) {
             userOrVendorName = vendor.name;
           }

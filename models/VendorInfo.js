@@ -40,7 +40,6 @@ const vendorInfoSchema = new mongoose.Schema({
     },
     nature: {
         type: String,
-        required: true,
     },
     serviceAria: {
         type: String,

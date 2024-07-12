@@ -17,13 +17,13 @@ const upload = multer({ storage: storage });
 //         const { category } = req.params;
 //         const { subcategory } = req.body;
 
-//         console.log(category, subcategory);
+//       console.log(category, subcategory);
 
 //         // Ensure category is provided
 //         if (!category || !subcategory) {
 //             return res.status(400).send({ error: 'Category is required in the request body.' });
 //         }
-//         console.log('Uploaded file:', req.file);
+//       console.log('Uploaded file:', req.file);
 
 //         // Access the CSV file buffer
 //         const buffer = req.file.buffer.toString('utf-8');
@@ -47,7 +47,7 @@ const upload = multer({ storage: storage });
 //                 }
 //             });
 
-//             console.log('Keywords in the file:', newKeywords);
+//           console.log('Keywords in the file:', newKeywords);
 
 //         // Filter out existing keywords from the new keywords
 //         const uniqueNewKeywords = newKeywords.filter(newKeyword => {
@@ -87,7 +87,7 @@ router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
         const { category } = req.params;
         const { subcategory } = req.body;
 
-        console.log(category, subcategory);
+      console.log(category, subcategory);
 
         // Ensure category is provided
         if (!category || !subcategory) {
@@ -115,7 +115,7 @@ router.post('/add/:category', upload.single('csvFile'), async (req, res) => {
         }
 
         // Log keywords in the file being uploaded
-        console.log('Keywords in the file:', newKeywords);
+      console.log('Keywords in the file:', newKeywords);
 
         const existingKeywords = await Keyword.findOne({ subcategory });
 

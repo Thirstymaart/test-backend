@@ -107,7 +107,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
             vendors = await Vendor.find({ username }, 'name username email phoneNo paymentid city payment validtill paymentDate companyName gstNo address');
         } else {
             // Fetch data for all vendors
-            console.log("vendor not found");
+          console.log("vendor not found");
         }
 
         res.json(vendors);
@@ -120,7 +120,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
 // router.get('/invoices', verifyVendorToken, async (req, res) => {
 //     try {
 //         const { startDate, endDate } = req.query;
-//         console.log(startDate, endDate);
+//       console.log(startDate, endDate);
 //         // Input validation (optional but recommended)
 //         if (!startDate && !endDate) {
 //             // No dates provided, retrieve last 30 days data
@@ -141,7 +141,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
 //         try {
 //             start = moment(startDate, 'YYYY-MM-DD').toDate(); // Parse with moment.js
 //             end = moment(endDate, 'YYYY-MM-DD').toDate();
-//             console.log(start, end);
+//           console.log(start, end);
 //         } catch (error) {
 //             return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD expected)' });
 //         }
@@ -153,7 +153,7 @@ router.get('/company-invoice', verifyVendorToken, async (req, res) => {
 //                 $lt: new Date(end.getTime() + 24 * 60 * 60 * 399) // Less than endDate (next day)
 //             }
 //         }, 'name email phoneNo paymentid city payment validtill paymentDate'); // Specify desired fields
-// console.log(vendors);
+//// console.log(vendors);
 //         res.json(vendors);
 //     } catch (error) {
 //         console.error(error);

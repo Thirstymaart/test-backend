@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const fs = require('fs').promises;
+const path = require('path');
+
 const ProfileHome = require('../models/ProfileHome');
 const ProfileAbout = require('../models/ProfileAbout');
 const ProfileWhyus = require('../models/ProfileWhyus');
@@ -58,7 +61,7 @@ router.post('/getprofile', async (req, res) => {
         const companyNameRegex = new RegExp(companyName, 'i');
 
         if (!city || !companyName) {
-            console.log("city and Company name is requred");
+          console.log("city and Company name is requred");
             return res.status(404).json({ error: 'city and Company name is requred' });
         }
         else {
@@ -144,6 +147,49 @@ router.post('/home', authenticateToken, async (req, res) => {
             const savedProfile = await newProfile.save();
             res.status(201).json(savedProfile);
         }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// route to delete banners from the server 
+router.delete('/delete-banner/:banner', verifyVendorToken, async (req, res) => {
+    try {
+        const { banner } = req.params;
+
+        // Check if the vendor exists
+        const existingVendor = await Vendor.findById(req.vendorId);
+        if (!existingVendor) {
+            return res.status(400).json({ error: 'Invalid vendor ID' });
+        }
+
+        // Find the profile by vendor ID
+        const profile = await ProfileHome.findOne({ vendor: req.vendorId });
+        if (!profile) {
+            return res.status(404).json({ error: 'Profile not found' });
+        }
+
+        // Check if the banner exists in the profile's banner array
+        const bannerIndex = profile.banner.indexOf(banner);
+        if (bannerIndex === -1) {
+            return res.status(404).json({ error: 'Banner not found' });
+        }
+
+        // Delete the banner from the uploads folder
+        const imagePath = path.join(__dirname, '..', 'uploads', req.vendorId.toString(), banner);
+        try {
+            await fs.unlink(imagePath);
+        } catch (imageError) {
+            console.error(`Error deleting banner image: ${imageError.message}`);
+            // Continue even if the image deletion fails
+        }
+
+        // Remove the banner from the profile's banner array
+        profile.banner.splice(bannerIndex, 1);
+        await profile.save();
+
+        return res.status(200).json({ message: 'Banner deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -434,28 +480,28 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
         if (vendorInfo && vendorInfo.companyName && vendorInfo.address) {
             profileCompletion += criteriaWeights.companyInfo;
         }
-        
+
         // Calculate profile details completeness from ProfileHome, ProfileAbout, and ProfileWhyUs collections
         const profileHome = await ProfileHome.findOne({ vendor: vendorId });
         const profileAbout = await ProfileAbout.findOne({ vendor: vendorId });
         const profileWhyUs = await ProfileWhyus.findOne({ vendor: vendorId });
-        
-        if (profileHome && profileHome.homeintro ) {
+
+        if (profileHome && profileHome.homeintro) {
             profileCompletion += criteriaWeights.profileHomeDetails;
         }
-        console.log(profileCompletion ,"home");
+      console.log(profileCompletion, "home");
 
-        if ( profileAbout && profileAbout.aboutinto ) {
+        if (profileAbout && profileAbout.aboutinto) {
             profileCompletion += criteriaWeights.profileAboutDetails;
         }
 
-        console.log(profileCompletion ,"about");
+      console.log(profileCompletion, "about");
 
-        if ( profileWhyUs && profileWhyUs.mainHeading) {
+        if (profileWhyUs && profileWhyUs.mainHeading) {
             profileCompletion += criteriaWeights.profileWhyUsDetails;
         }
 
-        console.log(profileCompletion ,"whyus");
+      console.log(profileCompletion, "whyus");
 
         // Calculate products completeness from Product collection (example: at least 3 products uploaded)
         const productsCount = await Product.countDocuments({ vendor: vendorId });
@@ -464,14 +510,14 @@ router.get('/profile-completion/:vendorId', async (req, res) => {
 
 
         }
-        
-        console.log(profileCompletion ,"products");
-        
+
+      console.log(profileCompletion, "products");
+
         // Calculate overall profile completion percentage
         const overallProgress = (profileCompletion / (criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products)) * 100;
 
-        console.log(profileCompletion ,"profileCompletion");
-        console.log(criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products ,"criteriaWeights");
+      console.log(profileCompletion, "profileCompletion");
+      console.log(criteriaWeights.companyInfo + criteriaWeights.profileHomeDetails + criteriaWeights.profileAboutDetails + criteriaWeights.profileWhyUsDetails + criteriaWeights.products, "criteriaWeights");
 
 
         res.json({ profileCompletion: overallProgress });

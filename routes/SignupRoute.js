@@ -70,7 +70,7 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { identifier, password } = req.body;
-    console.log("data",identifier);
+  console.log("data",identifier);
 
     // Attempt to find a match in the User collection by email or username
     const user = await User.findOne({
@@ -167,7 +167,7 @@ console.log(user,"user");
 // router.post('/forgot-password', async (req, res) => {
 //   try {
 //     const { email } = req.body;
-//     console.log(req.body);
+//   console.log(req.body);
 
 //     // Validate the email and find the user
 //     const user = await User.findOne({ email });
@@ -264,7 +264,7 @@ console.log(user,"user");
 // router.post('/reset-password', async (req, res) => {
 //   try {
 //     const { resetToken, newPassword } = req.body;
-//     console.log(resetToken);
+//   console.log(resetToken);
 
 //     // Find the user with the provided reset token
 //     const user = await User.findOne({
@@ -294,7 +294,7 @@ console.log(user,"user");
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    console.log(req.body);
+  console.log(req.body);
 
     // Validate the email and find the user or vendor
     const user = await User.findOne({ email });
@@ -526,7 +526,7 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   try {
     const { resetToken, newPassword, userType } = req.body;
-    console.log(resetToken);
+  console.log(resetToken);
 
     let Model;
     if (userType === 'user') {

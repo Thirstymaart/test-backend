@@ -7,6 +7,8 @@ const ProfileHome = require('../models/ProfileHome');
 const ProfileAbout = require('../models/ProfileAbout');
 const ProfileWhyus = require('../models/ProfileWhyus');
 const Products = require('../models/Products');
+const Review = require('../models/Review');
+const Vendorkeywords = require('../models/Vendorkeywords');
 const jwt = require('jsonwebtoken');
 const Fuse = require('fuse.js');
 
@@ -129,7 +131,7 @@ router.get('/categories', async (req, res) => {
 
 //     // Loop through each vendor with the specified subcategory
 //     for (const vendorInfo of matchedVendors) {
-//       // console.log(vendorInfo.businessType);
+//       //// console.log(vendorInfo.businessType);
 //       // Query Vendor collection using vendorId
 //       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
 
@@ -201,6 +203,16 @@ router.get('/list/:category', async (req, res) => {
     for (const vendorInfo of matchedVendors) {
       // Query Vendor collection using vendorId
       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+      const keywordsResult = await Vendorkeywords.findOne({ vendor: vendorInfo.vendorId });
+
+      // Fetch keywords or set to an empty array if not found
+      const keywords = keywordsResult ? keywordsResult.keywords : [];
+
+      const reviews = await Review.find({ vendorId: vendorInfo.vendorId }).select('rating');
+
+      // Calculate total number of ratings and average rating
+      const totalRatings = reviews.length;
+      const averageRating = totalRatings > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings).toFixed(1) : '0.0';
 
       if (vendor) {
         // Determine urlpart based on businessType
@@ -248,6 +260,10 @@ router.get('/list/:category', async (req, res) => {
           city: vendor.city,
           username: vendor.username,
           companyName2: vendor.companyName,
+          allkeywords: keywords, // Use keywords here
+
+          totalRatings,
+          averageRating,
         };
 
         // Push the merged data to the array
@@ -274,6 +290,12 @@ router.get('/subcategories/:subCategory', async (req, res) => {
       return res.status(404).json({ message: false });
     }
 
+
+
+
+
+
+
     // Create an array to store the merged data for vendors with the specified subcategory
     const vendorsDataWithSubcategory = [];
 
@@ -281,6 +303,19 @@ router.get('/subcategories/:subCategory', async (req, res) => {
     for (const vendorInfo of vendorsWithSubcategory) {
       // Query Vendor collection using vendorId
       const vendor = await Vendor.findOne({ _id: vendorInfo.vendorId });
+
+      const keywords = await Vendorkeywords.findOne({ vendor: vendorInfo.vendorId });
+
+      const reviews = await Review.find({ vendorId: vendorInfo.vendorId }).select('rating');
+
+      // Calculate total number of ratings and average rating
+      const totalRatings = reviews.length;
+      const averageRating = totalRatings > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / totalRatings).toFixed(1) : '0.0';
+
+
+      if (!reviews || reviews.length === 0) {
+        return res.status(404).json({ message: false });
+      }
 
       if (vendor) {
         // Merge data from VendorInfo and Vendor collections
@@ -307,6 +342,11 @@ router.get('/subcategories/:subCategory', async (req, res) => {
           phone: vendor.phoneNo,
           city: vendor.city,
           username: vendor.username,
+
+          keywords: keywords.keywords,
+
+          totalRatings,
+          averageRating,
         };
 
         // Push the merged data to the array
@@ -557,7 +597,7 @@ router.get('/seo-data', async (req, res) => {
     const homeDescription = profileHome.description;
 
 
-    const profileAbout = await ProfileAbout.findOne({vendor})
+    const profileAbout = await ProfileAbout.findOne({ vendor })
     if (!profileAbout) {
       return res.status(404).json({ error: 'about not found for the vendor' });
     }

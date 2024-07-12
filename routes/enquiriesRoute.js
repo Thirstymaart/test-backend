@@ -138,7 +138,7 @@ router.put('/update-status', verifyVendorToken, async (req, res) => {
             istDate.setUTCHours(istDate.getUTCHours() + 5); // Adjust for IST (UTC+5)
             istDate.setUTCMinutes(istDate.getUTCMinutes() + 30); // Adjust for IST (UTC+5:30)
             updateFields.followupDate = istDate;
-            console.log(istDate, "IST Date");
+            //// console.log(istDate, "IST Date");
         } else {
             // If followupStatus is false, just update leadstatus to true
             updateFields.leadstatus = true;

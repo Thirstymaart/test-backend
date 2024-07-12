@@ -5,6 +5,7 @@ const VendorInfo = require('../models/VendorInfo');
 const Category = require('../models/Categories');
 const Vendor = require('../models/Vendor');
 const Vendorkeywords = require('../models/Vendorkeywords');
+const Review = require('../models/Review');
 
 router.get('/', async (req, res) => {
   try {
@@ -81,7 +82,7 @@ router.get('/', async (req, res) => {
       { 'subCategories.subCategoryName': { $regex: new RegExp(searchTerm, 'i') } },
       { 'subCategories.$': 1 } // Projection to include only the matched subcategory
     );
-    // console.log(categoriesBySubCategory,"sub");
+    //// console.log(categoriesBySubCategory,"sub");
 
     // Combine and send the results
     const results = {
@@ -131,7 +132,7 @@ router.get('/s', async (req, res) => {
     const searchTerm = req.query.search;
     const location = req.query.location; // Get location from query
 
-    console.log(searchTerm, "search triggerd");
+  console.log(searchTerm, "search triggerd");
 
     //search in vendorkeyword model
 
@@ -214,7 +215,7 @@ router.get('/s', async (req, res) => {
       { 'subCategories.subCategoryName': { $regex: new RegExp(searchTerm, 'i') } },
       { 'subCategories.$': 1 } // Projection to include only the matched subcategory
     );
-    // console.log(categoriesBySubCategory,"sub");
+    //// console.log(categoriesBySubCategory,"sub");
 
 
     // Combine and send the results
@@ -259,13 +260,16 @@ router.get('/s', async (req, res) => {
   }
 });
 
+
+
 // router.get('/listing', async (req, res) => {
 //   try {
 //     const searchTerm = req.query.search.replace(/-/g, ' ');
+//     const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
+//     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not specified
 
-
-//     //search in vendorkeyword model
-
+//     // Calculate the skip value based on the page number and limit
+//     const skip = (page - 1) * limit;
 
 //     // Search in Product model
 //     const products = await Product.find({
@@ -294,6 +298,9 @@ router.get('/s', async (req, res) => {
 //       ]
 //     });
 
+//     //get keywords from each vendor using the vendorId
+    
+
 //     // Create a map for quick lookup
 //     const vendorMap = new Map(vendors.map(vendor => [vendor._id.toString(), vendor]));
 //     const vendorInfoMap = new Map(vendorInfos.map(info => [info.vendorId.toString(), info]));
@@ -308,9 +315,9 @@ router.get('/s', async (req, res) => {
 //         const matchingFields = getMatchingFields(product, searchTerm);
 //         const vendorInfo = vendorMap.get(product.vendor.toString());
 //         const vendorInfoDetails = vendorInfoMap.get(product.vendor.toString());
+//         const keywords = keywordsMap.get(product.vendor.toString());
 //         return {
 //           _id: product._id,
-//           // vendor: vendorInfo,
 //           vendorCompanyName: vendorInfo.companyName,
 //           address: vendorInfoDetails.address,
 //           category: vendorInfoDetails.category,
@@ -318,8 +325,6 @@ router.get('/s', async (req, res) => {
 //           phoneNo: vendorInfo.phoneNo,
 //           city: vendorInfo.city,
 //           vendorId: vendorInfo._id,
-
-
 //           type: 'products',
 //           subType: 'category',
 //           productCategory: product.category,
@@ -330,7 +335,6 @@ router.get('/s', async (req, res) => {
 //           size: product.size,
 //           minqty: product.minqty,
 //           additionalinfo: product.additionalinfo,
-//           // vendorInfo: vendorInfoDetails, // Include VendorInfo data
 //           ...matchingFields,
 //         };
 //       });
@@ -340,8 +344,9 @@ router.get('/s', async (req, res) => {
 //       companyName: { $regex: new RegExp(searchTerm, 'i') },
 //     });
 
+
+
 //     const enhancedVendorInfos = await Promise.all(VendorInfos.map(async (vendorInfo) => {
-//       // Fetch vendor details using vendorId
 //       const vendor = await Vendor.findById(vendorInfo.vendorId);
 //       if (vendor) {
 //         return {
@@ -350,38 +355,34 @@ router.get('/s', async (req, res) => {
 //           phoneNo: vendor.phoneNo,
 //           city: vendor.city,
 //           image: vendorInfo.logo,
-//           vendorId: vendor._id
+//           vendorId: vendor._id,
 //         };
 //       }
 //       return vendorInfo.toObject();
 //     }));
-
 
 //     const vendorKeywords = await Vendorkeywords.find({
 //       keywords: { $regex: new RegExp(searchTerm, 'i') },
 //     });
 
 //     const vendorsFromKeywords = await Promise.all(vendorKeywords.map(async (keyword) => {
-//       // Fetch vendor details using vendorId from the keyword
 //       const vendor = await Vendor.findById(keyword.vendor);
 //       const vendorInfo = await VendorInfo.find({
 //         vendorId: keyword.vendor
 //       });
 //       if (vendor) {
-//         return vendorInfo.map((info) => {
-//           return ({
-//             ...info.toObject(),
-//             vendorCompanyName: vendor.companyName,
-//             phoneNo: vendor.phoneNo,
-//             city: vendor.city,
-//             image:info.logo,
-//             vendorId: vendor._id
-//           });
-//         });
-
+//         return vendorInfo.map((info) => ({
+//           ...info.toObject(),
+//           vendorCompanyName: vendor.companyName,
+//           phoneNo: vendor.phoneNo,
+//           city: vendor.city,
+//           image: info.logo,
+//           vendorId: vendor._id
+//         }));
 //       }
 //       return null;
 //     }));
+
 //     const flattenedVendors = vendorsFromKeywords.reduce((acc, curr) => acc.concat(curr), []);
 
 //     // Combine and send the results
@@ -391,32 +392,21 @@ router.get('/s', async (req, res) => {
 //       ...flattenedVendors.filter(vendor => vendor !== null),
 //     ];
 
-//     res.json(results);
+//     const totalResults = results.length;
+//     const totalPages = Math.ceil(totalResults / limit);
+
+//     const pageData = results.slice((page - 1) * limit, page * limit);
+
+//     res.json({
+//       results: pageData,
+//       totalResults,
+//       totalPages,
+//     });
 //   } catch (error) {
 //     console.error(error);
 //     res.status(500).json({ success: false, error: 'Internal Server Error' });
 //   }
-
-//   function getMatchingFields(product, searchTerm) {
-//     const matchingFields = {};
-
-//     // Iterate through all possible name fields
-//     for (let i = 1; i <= 3; i++) {
-//       const fieldName = `name${i}`;
-//       if (product[fieldName] && product[fieldName].toLowerCase().includes(searchTerm.toLowerCase())) {
-//         matchingFields.name = product[fieldName];
-//         matchingFields.description = product[`description${i}`];
-//         matchingFields.price = product[`price${i}`];
-//         matchingFields.image = product[`image${i}`];
-//         // Add other fields as needed
-//         break; // Stop searching if a match is found
-//       }
-//     }
-
-//     return matchingFields;
-//   }
 // });
-
 
 router.get('/listing', async (req, res) => {
   try {
@@ -442,21 +432,40 @@ router.get('/listing', async (req, res) => {
 
     // Fetch vendor information from the vendors collection
     const vendors = await Vendor.find({
-      $and: [
-        { _id: { $in: vendorIds } },
-      ]
+      _id: { $in: vendorIds },
     });
 
     // Fetch vendor information from the VendorInfo collection
     const vendorInfos = await VendorInfo.find({
-      $and: [
-        { vendorId: { $in: vendorIds } },
-      ]
+      vendorId: { $in: vendorIds },
+    });
+
+    // Fetch keywords for each vendor
+    const vendorKeywords = await Vendorkeywords.find({
+      vendor: { $in: vendorIds },
     });
 
     // Create a map for quick lookup
     const vendorMap = new Map(vendors.map(vendor => [vendor._id.toString(), vendor]));
     const vendorInfoMap = new Map(vendorInfos.map(info => [info.vendorId.toString(), info]));
+    const keywordsMap = new Map(vendorKeywords.map(kw => [kw.vendor.toString(), kw.keywords]));
+
+    // Fetch reviews for each vendor and calculate ratings
+    const reviews = await Review.find({ vendorId: { $in: vendorIds } }).select('vendorId rating');
+    const reviewMap = new Map();
+    reviews.forEach(review => {
+      if (!reviewMap.has(review.vendorId.toString())) {
+        reviewMap.set(review.vendorId.toString(), []);
+      }
+      reviewMap.get(review.vendorId.toString()).push(review.rating);
+    });
+
+    // Function to calculate average rating
+    const calculateRatings = (ratings) => {
+      const totalRatings = ratings.length;
+      const averageRating = totalRatings > 0 ? (ratings.reduce((sum, rating) => sum + rating, 0) / totalRatings).toFixed(1) : '0.0';
+      return { totalRatings, averageRating };
+    };
 
     // Transform the products array to include matching products with the same city and VendorInfo
     const transformedProducts = products
@@ -468,6 +477,9 @@ router.get('/listing', async (req, res) => {
         const matchingFields = getMatchingFields(product, searchTerm);
         const vendorInfo = vendorMap.get(product.vendor.toString());
         const vendorInfoDetails = vendorInfoMap.get(product.vendor.toString());
+        const keywords = keywordsMap.get(product.vendor.toString());
+        const ratings = reviewMap.get(product.vendor.toString()) || [];
+        const { totalRatings, averageRating } = calculateRatings(ratings);
         return {
           _id: product._id,
           vendorCompanyName: vendorInfo.companyName,
@@ -477,6 +489,9 @@ router.get('/listing', async (req, res) => {
           phoneNo: vendorInfo.phoneNo,
           city: vendorInfo.city,
           vendorId: vendorInfo._id,
+          keywords: keywords || [],
+          totalRatings,
+          averageRating,
           type: 'products',
           subType: 'category',
           productCategory: product.category,
@@ -498,6 +513,9 @@ router.get('/listing', async (req, res) => {
 
     const enhancedVendorInfos = await Promise.all(VendorInfos.map(async (vendorInfo) => {
       const vendor = await Vendor.findById(vendorInfo.vendorId);
+      const keywords = keywordsMap.get(vendorInfo.vendorId.toString());
+      const ratings = reviewMap.get(vendorInfo.vendorId.toString()) || [];
+      const { totalRatings, averageRating } = calculateRatings(ratings);
       if (vendor) {
         return {
           ...vendorInfo.toObject(),
@@ -505,21 +523,27 @@ router.get('/listing', async (req, res) => {
           phoneNo: vendor.phoneNo,
           city: vendor.city,
           image: vendorInfo.logo,
-          vendorId: vendor._id
+          vendorId: vendor._id,
+          keywords: keywords || [],
+          totalRatings,
+          averageRating,
         };
       }
       return vendorInfo.toObject();
     }));
 
-    const vendorKeywords = await Vendorkeywords.find({
+    const vendorKeywordsSearch = await Vendorkeywords.find({
       keywords: { $regex: new RegExp(searchTerm, 'i') },
     });
 
-    const vendorsFromKeywords = await Promise.all(vendorKeywords.map(async (keyword) => {
+    const vendorsFromKeywords = await Promise.all(vendorKeywordsSearch.map(async (keyword) => {
       const vendor = await Vendor.findById(keyword.vendor);
       const vendorInfo = await VendorInfo.find({
         vendorId: keyword.vendor
       });
+      const keywords = keywordsMap.get(keyword.vendor.toString());
+      const ratings = reviewMap.get(keyword.vendor.toString()) || [];
+      const { totalRatings, averageRating } = calculateRatings(ratings);
       if (vendor) {
         return vendorInfo.map((info) => ({
           ...info.toObject(),
@@ -527,7 +551,10 @@ router.get('/listing', async (req, res) => {
           phoneNo: vendor.phoneNo,
           city: vendor.city,
           image: info.logo,
-          vendorId: vendor._id
+          vendorId: vendor._id,
+          keywords: keywords || [],
+          totalRatings,
+          averageRating,
         }));
       }
       return null;
@@ -584,7 +611,7 @@ router.get('/home', async (req, res) => {
     const searchTerm = req.query.search;
     const location = req.query.location; // Get location from query
 
-    console.log(searchTerm, "search triggerd");
+  console.log(searchTerm, "search triggerd");
 
     //search in vendorkeyword model
 
@@ -594,12 +621,12 @@ router.get('/home', async (req, res) => {
       name: { $regex: new RegExp(searchTerm, 'i') },
     });
 
-    console.log(products, "products");
+  console.log(products, "products");
 
     // Extract unique vendor IDs from the products
     const vendorIds = Array.from(new Set(products.map(product => product.vendor)));
 
-    console.log(vendorIds, "vendorIds");
+  console.log(vendorIds, "vendorIds");
 
     // Fetch vendor information from the vendors collection
     const vendors = await Vendor.find({
@@ -609,7 +636,7 @@ router.get('/home', async (req, res) => {
       ]
     });
 
-    console.log(vendors, "vendors");
+  console.log(vendors, "vendors");
 
     // Create a map for quick lookup
     const vendorMap = new Map(vendors.map(vendor => [vendor._id.toString(), vendor]));
@@ -667,7 +694,7 @@ router.get('/home', async (req, res) => {
       { 'subCategories.subCategoryName': { $regex: new RegExp(searchTerm, 'i') } },
       { 'subCategories.$': 1 } // Projection to include only the matched subcategory
     );
-    // console.log(categoriesBySubCategory,"sub");
+    //// console.log(categoriesBySubCategory,"sub");
 
 
     // Combine and send the results

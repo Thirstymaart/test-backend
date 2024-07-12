@@ -48,7 +48,7 @@ const verifyToken = (req, res, next) => {
 
 router.post('/upload', verifyToken, upload.single('image'), async (req, res) => {
   const vendorId = req.user.id; // Assuming vendorId is stored in JWT payload
-  console.log("Image Upload ",vendorId);
+  //// console.log("Image Upload ",vendorId);
   try {
     // Fetch the vendor's details
     const vendor = await Vendor.findById(vendorId);

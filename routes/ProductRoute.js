@@ -293,44 +293,8 @@ router.get('/category/:category', async (req, res) => {
 //   }
 // });
 
-router.delete('/delete/:productId', verifyToken, async (req, res) => {
-  const vendorId = req.vendorId;
-  const productId = req.params.productId;
 
-  // Check if the product with the given ID exists and belongs to the vendor
-  const product = await Product.findOne({ _id: productId, vendor: vendorId });
 
-  if (!product) {
-    return res.status(404).json({ error: 'Product not found' });
-  }
-
-  // Delete the product images from the server
-  try {
-    // Assuming images are stored in the format image, image1, image2, image3
-    const imagesToDelete = [product.image, product.image1, product.image2, product.image3];
-
-    for (const imageName of imagesToDelete) {
-      if (imageName) {
-        const imagePath = `./uploads/${vendorId}/${imageName}`;
-        try {
-          await fs.unlink(imagePath);
-          console.log(`Image ${imageName} deleted successfully`);
-        } catch (error) {
-          console.error(`Error deleting image ${imageName}:`, error);
-          // Log the error and continue with the next image
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error deleting product images:', error);
-    return res.status(500).json({ error: 'Error deleting product images' });
-  }
-
-  // Delete the product using the deleteOne method
-  await Product.deleteOne({ _id: productId, vendor: vendorId });
-
-  res.json({ message: 'Product deleted successfully' });
-});
 
 router.put('/modify/:productId', verifyToken, async (req, res) => {
   try {
@@ -393,7 +357,7 @@ router.post('/setfeatured', verifyToken, async (req, res) => {
   try {
     const { name, description, price, image, size, minqty, additionalinfo } = req.body;
     const vendorId = req.vendorId;
-    console.log(vendorId);
+  console.log(vendorId);
 
     const featuredProduct = new FeaturedProduct({
       vendor: vendorId,
@@ -406,7 +370,7 @@ router.post('/setfeatured', verifyToken, async (req, res) => {
       additionalinfo
     });
 
-    console.log(featuredProduct);
+  console.log(featuredProduct);
 
     await featuredProduct.save();
 
@@ -416,7 +380,7 @@ router.post('/setfeatured', verifyToken, async (req, res) => {
 
 
   } catch (error) {
-    console.log(error);
+  console.log(error);
     res.status(500).json({ error: 'Server error' });
   }
 
@@ -452,7 +416,7 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
   const { categoryName, categoryDesc, maintype, products } = req.body;
   const vendorId = req.vendorId;
 
-  console.log(categoryName, categoryDesc, products, "/n", maintype, "data");
+console.log(categoryName, categoryDesc, products, "/n", maintype, "data");
 
   try {
     // Ensure that the number of products being added does not exceed 4
@@ -480,11 +444,11 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
         minqty,
         additionalinfo,
       });
-      console.log("products", product);
+    console.log("products", product);
       await product.save();
       // Push the ID of the saved product to the productIds array
       productIds.push(product._id);
-      // console.log("product id",productIds);
+      //// console.log("product id",productIds);
     }
 
     // Create a new ProductsCategory instance with the productIds array
@@ -494,7 +458,7 @@ router.post('/add-category', verifyVendorToken, async (req, res) => {
       categoryDesc,
       products: productIds,
     });
-    console.log("category", category);
+  console.log("category", category);
     await category.save();
 
     res.status(201).json({ message: 'Category added successfully', category });
@@ -589,12 +553,12 @@ router.get('/vendor-categories-products', verifyVendorToken, async (req, res) =>
 router.get('/vendor-products', verifyVendorToken, async (req, res) => {
   const vendorId = req.vendorId;
 
-  console.log(vendorId, "id of vendor");
+console.log(vendorId, "id of vendor");
 
   try {
     // Fetch all categories of the vendor
     const categories = await ProductsCategory.find({ vendor: vendorId }).populate('products');
-    console.log(categories);
+  console.log(categories);
     // Fetch all products of the vendor (excluding those in categories)
     const productsNotInCategories = await Product.find({ vendor: vendorId, _id: { $nin: categories.flatMap(cat => cat.products) } });
 
@@ -610,7 +574,7 @@ router.get('/vendor-products', verifyVendorToken, async (req, res) => {
 router.put('/set-featured/:productId', verifyVendorToken, async (req, res) => {
   const productId = req.params.productId;
   const vendorId = req.vendorId; // Assuming you have middleware to extract vendor ID
-  console.log(vendorId, "id of vendor");
+console.log(vendorId, "id of vendor");
 
   try {
     const product = await Product.findById(productId);
@@ -628,7 +592,7 @@ router.put('/set-featured/:productId', verifyVendorToken, async (req, res) => {
     await product.save();
 
     res.status(200).json({ message: `Product ${product.featured ? 'set as featured' : 'removed from featured'}`, product });
-    console.log(`Product ${product.featured ? 'set as featured' : 'removed from featured'}`);
+  console.log(`Product ${product.featured ? 'set as featured' : 'removed from featured'}`);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -668,10 +632,10 @@ router.delete('/delete-category/:categoryId', verifyToken, async (req, res) => {
   const categoryId = req.params.categoryId;
   const isCategory = req.query.isCategory;
 
-  console.log(isCategory, "isCategory");
+console.log(isCategory, "isCategory");
 
   if (isCategory === 'false') {
-    console.log("delete product");
+  console.log("delete product");
     try {
       // Check if the product with the given ID exists and belongs to the vendor
       const product = await Product.findOne({ _id: categoryId, vendor: vendorId });
@@ -698,7 +662,7 @@ router.delete('/delete-category/:categoryId', verifyToken, async (req, res) => {
       return res.status(500).json({ error: 'Error deleting product' });
     }
   } else {
-    console.log("delete category");
+  console.log("delete category");
     try {
       // Check if the category with the given ID exists and belongs to the vendor
       const category = await ProductsCategory.findOne({ _id: categoryId, vendor: vendorId });

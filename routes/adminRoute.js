@@ -88,7 +88,7 @@ router.post('/change-password', verifyAdminToken, async (req, res) => {
 });
 
 // Route to create admin manager (requires super admin token)
-router.post('/create-admin-roll', verifyAdminToken, async (req, res) => {
+router.post('/create-admin-roll', async (req, res) => {
     try {
         const { email, password, roles } = req.body;
 

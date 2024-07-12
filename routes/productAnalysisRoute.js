@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ButtonClick = require('../models/ButtonClick');
+const Enquiries = require('../models/Enquiries');
 const Vendor = require('../models/Vendor');
 const { verifyVendorToken } = require('../middleware/authMiddleware');
 
@@ -58,7 +59,7 @@ router.post('/profile-hit', async (req, res) => {
     const companyNameRegex = new RegExp(companyName, 'i');
 
     if (!city || !companyName) {
-      console.log("city and Company name is requred");
+    console.log("city and Company name is requred");
       return res.status(404).json({ error: 'city and Company name is requred' });
     }
     else {
@@ -277,310 +278,135 @@ function formatDateToDDMM(dateString) {
   return formattedDate;
 }
 
-// router.post('/get-data-for-date', verifyToken, async (req, res) => {
-//   try {
-//     const { startDate } = req.body;
+router.get('/enquire-clicks', verifyVendorToken, async (req, res) => {
+  try {
+    const { preset, startDate, endDate } = req.query;
+    const vendorId = req.vendorId;
 
-//     const vendorId = req.vendorId
+    // Helper function to get the day of the week as a string
+    const getDayOfWeek = (dayIndex) => {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      return days[dayIndex];
+    };
+
+    // Helper function to calculate the start and end of a week
+    const calculateWeekRange = (currentDate) => {
+      const start = new Date(currentDate);
+      start.setDate(currentDate.getDate() - currentDate.getDay());
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      return { start, end };
+    };
+
+    // Define the date range based on the selected preset or custom range
+    let dates = [];
+
+    if (preset) {
+      switch (preset) {
+        case 'week':
+          const currentDay = new Date();
+          const lastWeekStart = new Date(currentDay);
+          lastWeekStart.setDate(currentDay.getDate() - 7 - ((currentDay.getDay() + 6) % 7)); // Go back to the start of the last week
+          for (let i = 0; i < 7; i++) {
+            const date = new Date(lastWeekStart);
+            date.setDate(lastWeekStart.getDate() + i);
+            dates.push({
+              date: date.toISOString().slice(0, 10),
+              day: getDayOfWeek(date.getDay())
+            });
+          }
+          break;
+        case 'month':
+          const lastMonth = new Date();
+          lastMonth.setMonth(lastMonth.getMonth() - 1);
+          const daysInLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate();
+          for (let i = 1; i <= daysInLastMonth; i++) {
+            const date = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), i);
+            dates.push({
+              date: i.toString(), // Only the day of the month
+              day: getDayOfWeek(date.getDay())
+            });
+          }
+          break;
+        case '90days':
+          const today = new Date();
+          for (let i = 90; i > 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            dates.push({
+              date: date.getDate().toString(), // Only the day of the month
+              day: getDayOfWeek(date.getDay())
+            });
+          }
+          break;
+        case 'range':
+          // Check if both startDate and endDate are provided for range preset
+          if (!startDate || !endDate) {
+            return res.status(400).json({ error: 'Start date and end date are required for range preset' });
+          }
+          // Calculate the dates within the custom range
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          while (start <= end) {
+            dates.push({
+              date: start.toISOString().slice(0, 10),
+              day: getDayOfWeek(start.getDay())
+            });
+            start.setDate(start.getDate() + 1);
+          }
+          break;
+        default:
+          return res.status(400).json({ error: 'Invalid preset' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Preset is required' });
+    }
+
+    // Find all enquiries for the given vendor
+    const enquiries = await Enquiries.find({ vendor: vendorId });
+
+    // Create a result array to store the number of enquiries for each date
+    const result = dates.map(dateObj => {
+      const count = enquiries.filter(enquiry => {
+        const enquiryDate = (preset === 'month' || preset === '90days')
+          ? new Date(enquiry.date).getDate().toString() // Only the day of the month for month and 90days presets
+          : new Date(enquiry.date).toISOString().slice(0, 10);
+        return enquiryDate === dateObj.date;
+      }).length;
+      return { ...dateObj, enquiries: count };
+    });
+
+    // Calculate total enquiries for this week and last week
+    const today = new Date();
+    const currentWeekRange = calculateWeekRange(today);
+    const lastWeekRange = calculateWeekRange(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7));
+
+    const totalEnquiriesCurrentWeek = enquiries.filter(enquiry => {
+      const enquiryDate = new Date(enquiry.date);
+      return enquiryDate >= currentWeekRange.start && enquiryDate <= currentWeekRange.end;
+    }).length;
+
+    const totalEnquiriesLastWeek = enquiries.filter(enquiry => {
+      const enquiryDate = new Date(enquiry.date);
+      return enquiryDate >= lastWeekRange.start && enquiryDate <= lastWeekRange.end;
+    }).length;
+
+    res.json({
+      result,
+      totalEnquiriesCurrentWeek,
+      totalEnquiriesLastWeek
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
-//     const previousStartDate = new Date(startDate);
-//     previousStartDate.setDate(previousStartDate.getDate() - 1);
-
-//     // Find all product analysis entries for the specified vendor within the date range for both current and previous weeks
-//     const currentDayData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//       date: {
-//         $gte: new Date(startDate)
-//       },
-//     });
-
-//     const previousDayData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//      date: {
-//         $gte: previousStartDate
-//       },
-
-//     });
-
-//       const currentDate = new Date(startDate);
-//       currentDate.setDate(currentDate.getDate());
-
-//       const dayData = {
-//         share: 0,
-//         call: 0,
-//         whatsapp: 0,
-//         profile: 0,
-//         enquire: 0,
-//         prevshare: 0,
-//         prevcall: 0,
-//         prevwhatsapp: 0,
-//         prevprofile: 0,
-//         prevenquire: 0,
-//       };
-
-
-//       if (currentDayData.length > 0) {
-//         currentDayData.forEach((entry) => {
-//           dayData.share += entry.shareClick;
-//           dayData.call += entry.callClick;
-//           dayData.whatsapp += entry.whatsappClick;
-//           dayData.profile += entry.profileClick;
-//           dayData.enquire += entry.enquireClick;
-//         });
-//       }
-
-//       if (previousDayData.length > 0) {
-//         previousDayData.forEach((entry) => {
-//           dayData.prevshare += entry.shareClick;
-//           dayData.prevcall += entry.callClick;
-//           dayData.prevwhatsapp += entry.whatsappClick;
-//           dayData.prevprofile += entry.profileClick;
-//           dayData.prevenquire += entry.enquireClick;
-//         });
-//       }
 
 
 
-//     res.json(dayData);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
 
-// router.post('/get-data-for-week', verifyToken, async (req, res) => {
-//   try {
-//     const { startDate } = req.body;
-//     const vendorId = req.vendorId
-
-//     const currentEndDate = new Date(startDate);
-//     currentEndDate.setDate(currentEndDate.getDate() + 6); // Calculate the end date for the current week
-
-//     const previousStartDate = new Date(startDate);
-//     previousStartDate.setDate(previousStartDate.getDate() - 7); // Calculate the start date for the previous week
-//     const previousEndDate = new Date(previousStartDate);
-//     previousEndDate.setDate(previousEndDate.getDate() + 6); // Calculate the end date for the previous week
-
-//     // Find all product analysis entries for the specified vendor within the date range for both current and previous weeks
-//     const currentWeekData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//       date: {
-//         $gte: new Date(startDate),
-//         $lte: currentEndDate,
-//       },
-//     });
-
-//     const previousWeekData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//       date: {
-//         $gte: previousStartDate,
-//         $lte: previousEndDate,
-//       },
-//     });
-
-//     const result = [];
-
-//     for (let i = 0; i < 7; i++) {
-//       const currentDate = new Date(startDate);
-//       currentDate.setDate(currentDate.getDate() + i);
-//       const formattedDate = currentDate.toDateString();
-//       const cDate = currentDate.getDate().toString();
-
-//       const dayData = {
-//         day: formattedDate.substr(0, 3).toLowerCase(), // Abbreviated day name (e.g., "mon")
-//         date: cDate, // Include the full date
-//         share: 0,
-//         call: 0,
-//         whatsapp: 0,
-//         profile: 0,
-//         enquire: 0,
-//         prevshare: 0,
-//         prevcall: 0,
-//         prevwhatsapp: 0,
-//         prevprofile: 0,
-//         prevenquire: 0,
-//       };
-
-//       // Calculate the button clicks for the current week
-//       const currentWeekAnalysis = currentWeekData.filter((entry) => entry.date.toDateString() === formattedDate);
-//       if (currentWeekAnalysis.length > 0) {
-//         currentWeekAnalysis.forEach((entry) => {
-//           dayData.share += entry.shareClick;
-//           dayData.call += entry.callClick;
-//           dayData.whatsapp += entry.whatsappClick;
-//           dayData.profile += entry.profileClick;
-//           dayData.enquire += entry.enquireClick;
-//         });
-//       }
-
-//       // Calculate the button clicks for the previous week
-//       const previousWeekAnalysis = previousWeekData.filter((entry) => entry.date.toDateString() === formattedDate);
-//       if (previousWeekAnalysis.length > 0) {
-//         previousWeekAnalysis.forEach((entry) => {
-//           dayData.prevshare += entry.shareClick;
-//           dayData.prevcall += entry.callClick;
-//           dayData.prevwhatsapp += entry.whatsappClick;
-//           dayData.prevprofile += entry.profileClick;
-//           dayData.prevenquire += entry.enquireClick;
-//         });
-//       }
-
-//       result.push(dayData);
-//     }
-
-//     res.json(result);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
-
-// // Get data for a date range of a month (30 days)
-// router.post('/get-data-for-month', verifyToken, async (req, res) => {
-//   try {
-//     const { startDate } = req.body;
-//     const vendorId = req.vendorId
-
-//     const currentMonthStartDate = new Date(startDate);
-//     currentMonthStartDate.setDate(1); // Set the start date to the first day of the month
-
-//     // Calculate the end date for the current month
-//     const currentMonthEndDate = new Date(currentMonthStartDate);
-//     currentMonthEndDate.setMonth(currentMonthEndDate.getMonth() + 1);
-//     currentMonthEndDate.setDate(currentMonthEndDate.getDate() - 1);
-
-//     const previousMonthStartDate = new Date(currentMonthStartDate);
-//     previousMonthStartDate.setMonth(previousMonthStartDate.getMonth() - 1); // Calculate the start date for the previous month
-
-//     const previousMonthEndDate = new Date(currentMonthStartDate);
-//     previousMonthEndDate.setDate(0); // Set the end date to the last day of the previous month
-
-//     // Find all product analysis entries for the specified vendor within the date range for both current and previous months
-//     const currentMonthData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//       date: {
-//         $gte: currentMonthStartDate,
-//         $lte: currentMonthEndDate,
-//       },
-//     });
-
-//     const previousMonthData = await ProductAnalysis.find({
-//       vendor: vendorId,
-//       date: {
-//         $gte: previousMonthStartDate,
-//         $lte: previousMonthEndDate,
-//       },
-//     });
-
-//     const result = [];
-
-//     // Calculate the number of days in the current month
-//     const numDaysInCurrentMonth = (currentMonthEndDate - currentMonthStartDate) / (1000 * 60 * 60 * 24) + 1;
-
-//     for (let i = 0; i < numDaysInCurrentMonth; i++) {
-//       const currentDate = new Date(currentMonthStartDate);
-//       currentDate.setDate(currentMonthStartDate.getDate() + i);
-//       const formattedDate = currentDate.toDateString();
-//       const cDate = currentDate.getDate().toString();
-
-//       const dayData = {
-//         day: formattedDate.substr(0, 3).toLowerCase(), // Abbreviated day name (e.g., "mon")
-//         date: cDate, // Include the full date
-//         share: 0,
-//         call: 0,
-//         whatsapp: 0,
-//         profile: 0,
-//         enquire: 0,
-//         prevshare: 0,
-//         prevcall: 0,
-//         prevwhatsapp: 0,
-//         prevprofile: 0,
-//         prevenquire: 0,
-//       };
-
-//       // Calculate the button clicks for the current month
-//       const currentMonthAnalysis = currentMonthData.filter((entry) => entry.date.toDateString() === formattedDate);
-//       if (currentMonthAnalysis.length > 0) {
-//         currentMonthAnalysis.forEach((entry) => {
-//           dayData.share += entry.shareClick;
-//           dayData.call += entry.callClick;
-//           dayData.whatsapp += entry.whatsappClick;
-//           dayData.profile += entry.profileClick;
-//           dayData.enquire += entry.enquireClick;
-//         });
-//       }
-
-//       // Calculate the button clicks for the previous month
-//       const previousMonthAnalysis = previousMonthData.filter((entry) => entry.date.toDateString() === formattedDate);
-//       if (previousMonthAnalysis.length > 0) {
-//         previousMonthAnalysis.forEach((entry) => {
-//           dayData.prevshare += entry.shareClick;
-//           dayData.prevcall += entry.callClick;
-//           dayData.prevwhatsapp += entry.whatsappClick;
-//           dayData.prevprofile += entry.profileClick;
-//           dayData.prevenquire += entry.enquireClick;
-//         });
-//       }
-
-//       result.push(dayData);
-//     }
-
-//     res.json(result);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
-
-// router.post('/top-products', async (req, res) => {
-//   try {
-//     const { vendorId, date } = req.body;
-
-//     // Parse the provided date to a Date object
-//     const selectedDate = new Date(date);
-
-//     // Calculate the start and end dates for the selected day
-//     const dayStartDate = new Date(selectedDate);
-//     dayStartDate.setHours(0, 0, 0, 0); // Start of the day
-//     const dayEndDate = new Date(selectedDate);
-//     dayEndDate.setHours(23, 59, 59, 999); // End of the day
-
-//     // Find the top 5 products for the selected day based on combined traffic
-//     const topProductsDay = await ProductAnalysis.aggregate([
-//       {
-//         $match: {
-//           vendor: vendorId,
-//           date: {
-//             $gte: dayStartDate,
-//             $lte: dayEndDate,
-//           },
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: '$productId',
-//           totalTraffic: {
-//             $sum: {
-//               $add: ['$shareClick', '$callClick', '$whatsappClick', '$profileClick', '$enquireClick'],
-//             },
-//           },
-//         },
-//       },
-//       {
-//         $sort: { totalTraffic: -1 }, // Sort by combined traffic in descending order
-//       },
-//       {
-//         $limit: 5,
-//       },
-//     ]);
-
-//     res.json(topProductsDay);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
 
 
 module.exports = router;
