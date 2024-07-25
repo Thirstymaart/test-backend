@@ -14,7 +14,12 @@ const mongoURI = process.env.MONGO_URI;
 
 
 const conectToMongo = () => {
-    mongoose.connect(mongoURI)
+    mongoose.connect(mongoURI,{
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    })
     console.log('conected to mongo sucesfully')
 }
 
